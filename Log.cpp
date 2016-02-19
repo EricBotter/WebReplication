@@ -3,7 +3,14 @@
 #include <sstream>
 #include <iostream>
 
+// Log static variables
+LogLevel Log::level;
+bool Log::logToFile;
+ofstream Log::file;
+
 void Log::log(string message, LogLevel level) {
+	if (level < Log::level) return;
+
 	time_t rawtime;
 	struct tm * timeinfo;
 	char buffer [80];
@@ -11,7 +18,7 @@ void Log::log(string message, LogLevel level) {
 	time (&rawtime);
 	timeinfo = localtime (&rawtime);
 
-	strftime (buffer,80,"%F %T.",timeinfo);
+	strftime (buffer, 80, "%F %T.", timeinfo);
 	stringstream ss;
 	ss << buffer << rawtime%1000 << ": " << message << endl;
 

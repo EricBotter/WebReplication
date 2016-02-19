@@ -15,7 +15,7 @@ HttpResponse::HttpResponse(string content) {
 	currentLine = content.substr(index, index = content.find("\r\n", index));
 	while (currentLine != "") {
 		lineIndex = currentLine.find(": ");
-		headers.insert(currentLine.substr(0, lineIndex), currentLine.substr(lineIndex+2));
+		headers.emplace(currentLine.substr(0, lineIndex), currentLine.substr(lineIndex+2));
 		currentLine = content.substr(index, index = content.find("\r\n", index));
 	}
 

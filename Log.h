@@ -14,6 +14,11 @@ enum LogLevel {
 };
 
 class Log {
+private:
+	static LogLevel level;
+	static bool logToFile;
+	static ofstream file;
+
 public:
 	static void log(string, LogLevel);
 	static void i(string message) {
@@ -31,11 +36,6 @@ public:
 	static void f(string message) {
 		log(message, FATAL);
 	}
-
-private:
-	static LogLevel level;
-	static bool logToFile;
-	static ofstream file;
 };
 
 
