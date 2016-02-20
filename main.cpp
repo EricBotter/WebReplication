@@ -29,13 +29,14 @@ int main() {
 
 	int newsockfd, c = sizeof(sockaddr_in);
 	sockaddr_in client;
-	newsockfd = accept(sockfd, (sockaddr*)&client, &c);
-	if (newsockfd < 0) {
-		Log::f("Unable to accept incoming connection");
-		return 2;
+	while ((newsockfd = accept(sockfd, (sockaddr*)&client, &c)) >= 0) {
+
 	}
 
-	//use send and recv to send/receive data.
+	if (newsockfd < 0) {
+		Log::f("Unable to accept other incoming connections");
+		return 2;
+	}
 
 	close(sockfd);
 
