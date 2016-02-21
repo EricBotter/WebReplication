@@ -9,8 +9,9 @@ private:
 	int sockfd;
 public:
 	ServerConnection(uint16_t);
+
 	//error checking function
-	Connection* accept();
+	Connection* takeConn();
 };
 
 

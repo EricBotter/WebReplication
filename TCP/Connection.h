@@ -5,19 +5,20 @@
 
 using namespace std;
 
+#define RECV_BUFFER_SIZE 2048
+
 class Connection {
 private:
 	int sockfd;
-	int sendBufPos, recvBufPos;
-	char* sendBuffer;
-	char* recvBuffer;
+	size_t recvBufPos;
+	char recvBuffer[RECV_BUFFER_SIZE];
 public:
 	//To be used by servers
 	Connection(int);
 	//To be used by clients
 	Connection(string, int);
 	~Connection();
-	int send(string);
+	int sendStr(string) const;
 	//receive until delimiter
 	string receive(string);
 	//receive given bytes

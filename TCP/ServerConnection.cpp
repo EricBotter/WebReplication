@@ -18,7 +18,7 @@ ServerConnection::ServerConnection(uint16_t port) {
 	bind(sockfd, (sockaddr*)&server, sizeof(server));
 }
 
-Connection* ServerConnection::accept() {
+Connection* ServerConnection::takeConn() {
 	int newsocketfd, size = sizeof(sockaddr_in);
 	sockaddr_in client;
 	newsocketfd = accept(sockfd, (sockaddr*)&client, &size);
