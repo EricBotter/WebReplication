@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstring>
 #include "ServerConnection.h"
-#include "../Log.h"
+#include "../Utilities/Log.h"
 
 ServerConnection::ServerConnection(uint16_t port) {
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);

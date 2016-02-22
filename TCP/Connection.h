@@ -16,11 +16,11 @@ public:
 	//To be used by servers
 	Connection(int);
 	//To be used by clients
-	Connection(string, int);
+	Connection(const string&, uint16_t);
 	~Connection();
-	int sendStr(string) const;
+	int sendStr(const string&) const;
 	//receive until delimiter
-	string receive(string);
+	string receive(const string&);
 	//receive given bytes
 	string receive(size_t);
 };

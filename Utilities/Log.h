@@ -1,7 +1,3 @@
-//
-// Created by Erc on 2/19/2016.
-//
-
 #ifndef THESIS_LOG_H
 #define THESIS_LOG_H
 
