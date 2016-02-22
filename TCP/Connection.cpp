@@ -35,7 +35,7 @@ string Connection::receive(string delimiter) {
 		size = recv(sockfd, recvBuffer + recvBufPos, RECV_BUFFER_SIZE - recvBufPos, 0);
 		end = strstr(recvBuffer, delimiter.c_str());
 		if (end == NULL) {
-			out.append(recvBuffer, (size_t)size);
+			out.append(recvBuffer, size + recvBufPos);
 			recvBufPos = 0;
 		} else {
 			end += delimiter.length();
@@ -47,6 +47,27 @@ string Connection::receive(string delimiter) {
 	} while (1);
 }
 
-string Connection::receive(int bytes) {
-	return "";
+string Connection::receive(size_t bytes) {
+	string out;
+	ssize_t size;
+	if (bytes < recvBufPos) {
+		out = string(recvBuffer, bytes);
+		recvBufPos -= bytes;
+		memmove(recvBuffer, recvBuffer + bytes, recvBufPos);
+		return out;
+	}
+	do {
+		size = recv(sockfd, recvBuffer + recvBufPos, RECV_BUFFER_SIZE - recvBufPos, 0);
+		size += recvBufPos;
+		recvBufPos = 0;
+		if (size < bytes) {
+			out.append(recvBuffer, (size_t)size);
+			bytes -= size;
+		} else {
+			out.append(recvBuffer, bytes);
+			recvBufPos = size - bytes;
+			memmove(recvBuffer, recvBuffer+bytes, recvBufPos);
+			return out;
+		}
+	} while (1);
 }

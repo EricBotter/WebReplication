@@ -22,7 +22,7 @@ public:
 	//receive until delimiter
 	string receive(string);
 	//receive given bytes
-	string receive(int);
+	string receive(size_t);
 };
 
 

@@ -12,15 +12,15 @@ void Log::log(string message, LogLevel level) {
 	if (level < Log::level) return;
 
 	time_t rawtime;
-	struct tm * timeinfo;
-	char buffer [80];
+	struct tm* timeinfo;
+	char buffer[80];
 
-	time (&rawtime);
-	timeinfo = localtime (&rawtime);
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
 
-	strftime (buffer, 80, "%F %T.", timeinfo);
+	strftime(buffer, 80, "%F %T: ", timeinfo);
 	stringstream ss;
-	ss << buffer << rawtime%1000 << ": " << message << endl;
+	ss << buffer << message << endl;
 
 	if (logToFile) {
 		file.open("log.log", ios::out | ios::app);
