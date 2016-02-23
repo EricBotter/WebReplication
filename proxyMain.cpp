@@ -18,11 +18,11 @@ int main() {
 
 	Connection* browser;
 	while ((browser = sc.takeConn()) != NULL) {
-		Log::d("Connection received. Waiting for HTTP request.");
+		Log::d("! Connection received. Waiting for HTTP request.");
 		string received = browser->receive("\r\n\r\n");
 		while (received != "") {
-			Log::d("Request received");
 			HttpRequest request(received);
+			Log::d(string("_ Request received for URL ")+request.url);
 
 			if (request.method == "GET") {
 				HttpRequest newRequest;
@@ -31,31 +31,29 @@ int main() {
 				newRequest.url = index != string::npos ? request.url.substr(index + 7) : "/";
 				newRequest.version = "HTTP/1.0";
 				newRequest.headers = request.headers;
+				newRequest.headers["Connection"] = "close";
 
 				Connection newConn(request.headers["Host"], 80);
 				newConn.sendStr(newRequest.compile());
 				HttpResponse response(newConn);
 				browser->sendStr(response.compile());
 			} else {
-				string error = "HTTP/1.1 501 Not Implemented\r\nConnection: ";
-//				error += request.headers["Connection"]; //FIXME: doesn't check for header presence
-//				error += "\r\n\r\n";
-				error += "close\r\n\r\n";
-				browser->sendStr(error);
+				browser->sendStr("HTTP/1.1 501 Not Implemented\r\nConnection: close\r\nProxy-Connection: close\r\n\r\n");
+				break;
 			}
+			Log::d("< Request completed");
 
 			received = browser->receive("\r\n\r\n");
 		}
 
 		delete browser;
+		Log::d(". Waiting for new connection...");
 	}
 
 	stringstream ss;
 	ss << "Error in receiving connections. Error (code " << errno << "):";
 	Log::f(ss.str());
 	Log::f(strerror(errno));
-
-	delete browser;
 
 	return 0;
 }

@@ -23,6 +23,8 @@ public:
 	string receive(const string&);
 	//receive given bytes
 	string receive(size_t);
+	//get host's IP
+	string getRemoteAddress();
 };
 
 

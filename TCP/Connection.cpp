@@ -65,7 +65,7 @@ string Connection::receive(const string& delimiter) {
 	}
 	do {
 		size = recv(sockfd, recvBuffer + recvBufPos, RECV_BUFFER_SIZE - recvBufPos, 0);
-		if (size == -1) {
+		if (size <= 0) {
 			recvBufPos = 0;
 			return "";
 		}
@@ -94,7 +94,7 @@ string Connection::receive(size_t bytes) {
 	}
 	do {
 		size = recv(sockfd, recvBuffer + recvBufPos, RECV_BUFFER_SIZE - recvBufPos, 0);
-		if (size == -1) {
+		if (size <= 0) {
 			recvBufPos = 0;
 			return "";
 		}
@@ -110,4 +110,8 @@ string Connection::receive(size_t bytes) {
 			return out;
 		}
 	} while (1);
+}
+
+string Connection::getRemoteAddress() {
+	return "";
 }
