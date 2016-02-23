@@ -3,11 +3,12 @@
 
 #include <map>
 #include "HttpRequest.h"
+#include "../TCP/Connection.h"
 
 using namespace std;
 
 class HttpResponse {
-private:
+public:
 	string version;
 	string responseCode;
 	string responseText;
@@ -15,8 +16,8 @@ private:
 	size_t contentLength;
 	char* content;
 
-public:
-	HttpResponse(string);
+	HttpResponse();
+	HttpResponse(Connection&);
 	~HttpResponse();
 	string compile();
 };

@@ -6,12 +6,13 @@
 #include <sys/errno.h>
 #include <netdb.h>
 #include <sstream>
+#include <iostream>
 #include "Connection.h"
 #include "../Utilities/Log.h"
 
 Connection::Connection(int sockfd) : sockfd(sockfd), recvBufPos(0) { }
 
-Connection::Connection(const string& host, uint16_t port) {
+Connection::Connection(const string& host, uint16_t port) : recvBufPos(0) {
 	addrinfo host_info;
 	addrinfo* host_info_list;
 
@@ -64,6 +65,10 @@ string Connection::receive(const string& delimiter) {
 	}
 	do {
 		size = recv(sockfd, recvBuffer + recvBufPos, RECV_BUFFER_SIZE - recvBufPos, 0);
+		if (size == -1) {
+			recvBufPos = 0;
+			return "";
+		}
 		end = strstr(recvBuffer, delimiter.c_str());
 		if (end == NULL) {
 			out.append(recvBuffer, size + recvBufPos);
@@ -81,7 +86,7 @@ string Connection::receive(const string& delimiter) {
 string Connection::receive(size_t bytes) {
 	string out;
 	ssize_t size;
-	if (bytes < recvBufPos) {
+	if (bytes <= recvBufPos) {
 		out = string(recvBuffer, bytes);
 		recvBufPos -= bytes;
 		memmove(recvBuffer, recvBuffer + bytes, recvBufPos);
@@ -89,6 +94,10 @@ string Connection::receive(size_t bytes) {
 	}
 	do {
 		size = recv(sockfd, recvBuffer + recvBufPos, RECV_BUFFER_SIZE - recvBufPos, 0);
+		if (size == -1) {
+			recvBufPos = 0;
+			return "";
+		}
 		size += recvBufPos;
 		recvBufPos = 0;
 		if (size < bytes) {

@@ -3,6 +3,7 @@
 #include <sys/errno.h>
 #include <iostream>
 #include <cstring>
+#include <sys/unistd.h>
 #include "ServerConnection.h"
 #include "../Utilities/Log.h"
 
@@ -31,4 +32,8 @@ Connection* ServerConnection::takeConn() {
 	if (newsocketfd < 0)
 		return NULL;
 	return new Connection(newsocketfd);
+}
+
+ServerConnection::~ServerConnection() {
+	close(sockfd);
 }

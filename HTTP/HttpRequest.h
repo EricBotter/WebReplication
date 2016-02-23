@@ -2,17 +2,18 @@
 #define THESIS_HTTPREQUEST_H
 
 #include <map>
+#include "../TCP/Connection.h"
 
 using namespace std;
 
 class HttpRequest {
-private:
+public:
 	string method;
 	string url;
 	string version;
 	map<string, string> headers;
 
-public:
+	HttpRequest();
 	HttpRequest(string);
 	virtual string compile();
 };
