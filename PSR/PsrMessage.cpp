@@ -28,22 +28,22 @@ PsrMessage::PsrMessage(Connection& connection) {
 
 	index = content.find(": ");
 	key = content.substr(0, index);
-	value = content.substr(index + 2);
+	value = content.substr(index + 2, content.find("\r\n", index + 2) - index - 2);
 }
 
-int PsrMessage::portFromAddress(string address) const {
+uint16_t PsrMessage::portFromAddress(string address) {
 	size_t index = address.find(":");
 	if (index == string::npos) {
-		return -1;
+		return 0;
 	}
 	stringstream ss;
-	int out;
+	uint16_t out;
 	ss << address.substr(index + 1);
 	ss >> out;
 	return out;
 }
 
-string PsrMessage::addressFromAddress(string address) const {
+string PsrMessage::addressFromAddress(string address) {
 	size_t index = address.find(":");
 	if (index == string::npos) {
 		return "";
@@ -64,18 +64,27 @@ void PsrMessage::setAddresses(const vector<string>& addresses) {
 	value = ss.str().substr(1);
 }
 
-vector PsrMessage::getHosts() {
+vector<string> PsrMessage::getHosts() {
 	vector<string> hosts;
-	size_t prevIndex = 0, index = value.find(" ");
-	while (index != string::npos) {
-		hosts.push_back(value.substr(prevIndex, index-prevIndex));
-		prevIndex = index + 1;
+	size_t prevIndex = 0, index;
+	do {
 		index = value.find(" ", prevIndex);
-	}
+		hosts.push_back(value.substr(prevIndex, index - prevIndex));
+		prevIndex = index + 1;
+	} while (index != string::npos);
 	return hosts;
 }
 
 void PsrMessage::setMessage(string message) {
 	key = "Message";
 	value = message;
+}
+
+void PsrMessage::setSites(const vector<string>& sites) {
+	key = "Available";
+	stringstream ss;
+	for (string s : sites) {
+		ss << " " << s;
+	}
+	value = ss.str().substr(1);
 }

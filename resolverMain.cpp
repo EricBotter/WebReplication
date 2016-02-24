@@ -1,8 +1,8 @@
 #include <iostream>
-#include <sys/unistd.h>
+#include <cstring>
 #include <sstream>
 #include <sys/errno.h>
-#include <cstring>
+#include <sys/unistd.h>
 #include "Utilities/Log.h"
 #include "TCP/Connection.h"
 #include "TCP/ServerConnection.h"
@@ -33,7 +33,7 @@ int main() {
 		} else if (request.key == "Available") {
 			vector<string> hosts = request.getHosts();
 			for(string host : hosts)
-				resolver.add(client->getRemoteAddress(), host);
+				resolver.add(host, client->getRemoteAddress());
 			response.setMessage("OK");
 		} else {
 			response.setMessage("INVALID");

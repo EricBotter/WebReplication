@@ -17,6 +17,7 @@ public:
 	Connection(int);
 	//To be used by clients
 	Connection(const string&, uint16_t);
+	Connection(const string&, uint16_t, const string&, uint16_t);
 	~Connection();
 	int sendStr(const string&) const;
 	//receive until delimiter

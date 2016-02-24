@@ -18,10 +18,12 @@ public:
 	PsrMessage(Connection&);
 	string compile();
 	void setAddresses(const vector<string>&);
-	vector getHosts();
-	int portFromAddress(string) const;
-	string addressFromAddress(string) const;
+	void setSites(const vector<string>&);
+	vector<string> getHosts();
 	void setMessage(string);
+
+	static uint16_t portFromAddress(string);
+	static string addressFromAddress(string);
 };
 
 

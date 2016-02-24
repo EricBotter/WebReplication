@@ -10,3 +10,6 @@ add_executable(Proxy ${SOURCE_FILES_PROXY})
 
 set(SOURCE_FILES_RESOLVER resolverMain.cpp ${SOURCE_FILES_COMMON} PSR/Resolver.cpp PSR/Resolver.h)
 add_executable(Resolver ${SOURCE_FILES_RESOLVER})
+
+set(SOURCE_FILES_FILESERVER fileServerMain.cpp ${SOURCE_FILES_COMMON} HTTP/FileServer.cpp HTTP/FileServer.h)
+add_executable(FileServer ${SOURCE_FILES_FILESERVER})

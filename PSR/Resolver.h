@@ -3,12 +3,13 @@
 
 #include <map>
 #include <vector>
+#include <set>
 
 using namespace std;
 
 class Resolver {
 private:
-	map<string, vector<string>> addressTable;
+	map<string, set<string>> addressTable;
 
 public:
 	vector<string> resolve(string);
