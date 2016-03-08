@@ -2,6 +2,7 @@
 #include <cstring>
 #include <sstream>
 #include <thread>
+#include <cstdlib>
 #include <sys/errno.h>
 #include "Utilities/Log.h"
 #include "TCP/ServerConnection.h"
@@ -13,35 +14,69 @@ using namespace std;
 
 #define SERVER_PORT 8000
 
+map<string, Connection*> connections;
+map<string, vector<string>> resolutions;
+
 void connectionThread(Connection* browser) {
 	Log::d("! Connection received. Waiting for HTTP request.");
 	string received = browser->receive("\r\n\r\n");
+	Connection* currentConnection = NULL;
+	string currentHost;
 	while (received != "") {
 		HttpRequest request(received);
-		Log::d(string("_ Request received for URL ")+request.url);
+		Log::d(string("_ Request received for URL ") + request.url);
 
 		if (request.method == "GET") {
 			HttpRequest newRequest;
 			newRequest.method = "GET";
 
 			if (request.url.find(".peer/") != string::npos) {
-				PsrMessage psrRequest;
-				psrRequest.key = "Host";
-				psrRequest.value = request.url.substr(7, request.url.substr(7).find("/"));
+				vector<string> hosts;
+				string hostName = request.url.substr(7, request.url.substr(7).find("/"));
 
-				Connection psrConn("127.0.0.1", 3921);
-				psrConn.sendStr(psrRequest.compile());
-				PsrMessage psrResponse(psrConn);
-				vector<string> hosts = psrResponse.getHosts();
+				if (resolutions.find(hostName) != resolutions.end()) {
+					hosts = resolutions[hostName];
+				} else {
+					PsrMessage psrRequest;
+					psrRequest.key = "Host";
+					psrRequest.value = hostName;
+
+					//FIXME: hardcoded resolution IP and PORT
+					Connection psrConn("127.0.0.1", 3921);
+					psrConn.sendStr(psrRequest.compile());
+					PsrMessage psrResponse(psrConn);
+					hosts = psrResponse.getHosts();
+					resolutions.insert({hostName, hosts});
+				}
 
 				newRequest.version = "HTTP/1.0";
-				newRequest.url = request.url.substr(7 + psrRequest.value.length());
+				newRequest.url = request.url.substr(7 + hostName.length());
 				newRequest.headers = request.headers;
-				newRequest.headers["Connection"] = "close";
 
-				Connection newConn(PsrMessage::addressFromAddress(hosts[0]), PsrMessage::portFromAddress(hosts[0]));
-				newConn.sendStr(newRequest.compile());
-				HttpResponse response(newConn);
+				if (currentConnection == NULL) {
+					for (int i = 0; i < hosts.size(); ++i) {
+						if (connections.find(hosts[i]) == connections.end()) {
+							currentConnection = new Connection(PsrMessage::addressFromAddress(hosts[i]),
+															   PsrMessage::portFromAddress(hosts[i]));
+							currentHost = hosts[i];
+							break;
+						}
+					}
+					if (currentConnection == NULL) {
+						unsigned long temp = rand() % hosts.size();
+						Log::d(" - Random host");
+						currentConnection = new Connection(PsrMessage::addressFromAddress(hosts[temp]),
+														   PsrMessage::portFromAddress(hosts[temp]));
+						currentHost = hosts[temp];
+					}
+					connections[currentHost] = currentConnection;
+					Log::d(string("Connecting to host ") + currentHost);
+				} else {
+					Log::d(string("Using existent connection to host ") + currentHost);
+				}
+
+				currentConnection->sendStr(newRequest.compile());
+				HttpResponse response(*currentConnection);
 				browser->sendStr(response.compile());
 
 			} else {
@@ -58,14 +93,22 @@ void connectionThread(Connection* browser) {
 				browser->sendStr(response.compile());
 			}
 		} else {
-			browser->sendStr("HTTP/1.1 501 Not Implemented\r\nConnection: close\r\nProxy-Connection: close\r\n\r\n");
+			browser->sendStr("HTTP/1.1 501 Not Implemented\r\nConnection: close\r\n\r\n");
 			break;
 		}
 		Log::d("< Request completed");
+		if (request.headers["Connection"] == "close") {
+			break;
+		}
 
 		received = browser->receive("\r\n\r\n");
 	}
 
+	if (currentHost != "") {
+		//FIXME: Other connections to this host from other threads are not considered
+		connections.erase(currentHost);
+		delete currentConnection;
+	}
 	delete browser;
 }
 

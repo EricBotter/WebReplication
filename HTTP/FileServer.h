@@ -13,6 +13,8 @@ public:
 	FileServer();
 	string getFile(string, string);
 	vector<string> getSiteList();
+	void init();
+	static string mimeFromFilename(string extension);
 };
 
 
