@@ -108,6 +108,7 @@ void connectionThread(Connection* browser) {
 		//FIXME: Other connections to this host from other threads are not considered
 		connections.erase(currentHost);
 		delete currentConnection;
+		Log::d("Dropping connection to " + currentHost);
 	}
 	delete browser;
 }

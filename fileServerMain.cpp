@@ -80,6 +80,7 @@ void connectionThread(Connection* client) {
 		received = client->receive("\r\n\r\n");
 	}
 
+	Log::d("x Closing connection to client");
 	delete client;
 }
 
