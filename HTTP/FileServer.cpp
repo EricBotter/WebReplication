@@ -7,7 +7,8 @@
 #include "FileServer.h"
 #include "../Utilities/Log.h"
 
-const char* filepath = "/home/websites/";
+const char* filepath = "/var/webr/websites/";
+const char* sigpath = "/var/webr/signatures/";
 const map<string, string> mimetypes = {
 		{".html", "text/html"},
 		{".htm", "text/html"},
