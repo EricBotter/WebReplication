@@ -31,7 +31,7 @@ bool FileVerifier::verify(string filepath, string signaturepath) {
 	system(command.c_str());
 
 	ifstream temp(tempfile);
-	string result(istreambuf_iterator<char>(temp), istreambuf_iterator<char>());
+	string result = string(istreambuf_iterator<char>(temp), istreambuf_iterator<char>());
 
 	return result.find("OK") != result.npos;
 }
