@@ -3,7 +3,7 @@ project(Thesis)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES_COMMON HTTP/HttpRequest.cpp HTTP/HttpRequest.h HTTP/HttpResponse.cpp HTTP/HttpResponse.h Utilities/Log.cpp Utilities/Log.h TCP/Connection.cpp TCP/Connection.h TCP/ServerConnection.cpp TCP/ServerConnection.h PSR/PsrMessage.cpp PSR/PsrMessage.h Utilities/FileVerifier.cpp Utilities/FileVerifier.h)
+set(SOURCE_FILES_COMMON HTTP/HttpRequest.cpp HTTP/HttpRequest.h HTTP/HttpResponse.cpp HTTP/HttpResponse.h Utilities/Log.cpp Utilities/Log.h TCP/Connection.cpp TCP/Connection.h TCP/ServerConnection.cpp TCP/ServerConnection.h PSR/PsrMessage.cpp PSR/PsrMessage.h Utilities/FileVerifier.cpp Utilities/FileVerifier.h Utilities/ConcurrentQueue.cpp Utilities/ConcurrentQueue.h)
 
 set(SOURCE_FILES_PROXY proxyMain.cpp ${SOURCE_FILES_COMMON} HTTP/WebsiteDownloader.cpp HTTP/WebsiteDownloader.h)
 add_executable(Proxy ${SOURCE_FILES_PROXY})
