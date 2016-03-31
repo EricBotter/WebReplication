@@ -15,7 +15,7 @@ public:
 	WebsiteDownloader();
 	~WebsiteDownloader();
 	void setActiveCaching(bool);
-	HttpResponse getWebpage(string, string);
+	HttpResponse getWebpage(const string&, const string&);
 
 private:
 	void threadFunction();

@@ -6,7 +6,7 @@
 WebsiteDownloader::WebsiteDownloader() {
 	threads.reserve(N_THREADS);
 	for (int i = 0; i < N_THREADS; ++i) {
-		threads.push_back(thread(threadFunction));
+		threads.push_back(thread(threadFunction, this));
 	}
 }
 
@@ -93,7 +93,7 @@ void WebsiteDownloader::setActiveCaching(bool active) {
 	//TODO: prefetching of possible required objects
 }
 
-HttpResponse WebsiteDownloader::getWebpage(string host, string page) {
+HttpResponse WebsiteDownloader::getWebpage(const string& host, const string& page) {
 	unique_lock<mutex> lock(requestQueueMutex);
 	requestQueue.push(make_pair(host, page));
 	lock.unlock();

@@ -2,6 +2,7 @@
 
 
 NetworkRequest::NetworkRequest(HttpRequest& hr) : originalRequest(hr) {
+	response = HttpResponse();
 	completed = false;
 }
 
@@ -18,6 +19,12 @@ bool NetworkRequest::setCompleted(bool b) {
 HttpRequest& NetworkRequest::getRequest() {
 	return originalRequest;
 }
+
+HttpResponse& NetworkRequest::getResponse() {
+	return response;
+}
+
+
 
 
 

@@ -3,10 +3,12 @@
 
 
 #include "../HTTP/HttpRequest.h"
+#include "../HTTP/HttpResponse.h"
 
 class NetworkRequest {
 private:
-	HttpRequest& originalRequest;
+	HttpRequest originalRequest;
+	HttpResponse response;
 	bool completed;
 
 public:
@@ -15,7 +17,9 @@ public:
 	bool isCompleted();
 	bool setCompleted(bool);
 
+	// This API is for the Proxy - will not change.
 	HttpRequest& getRequest();
+	HttpResponse& getResponse();
 };
 
 
