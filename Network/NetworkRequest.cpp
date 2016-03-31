@@ -1,7 +1,7 @@
 #include "NetworkRequest.h"
 
 
-NetworkRequest::NetworkRequest(HttpRequest& hr) : originalRequest(hr) {
+NetworkRequest::NetworkRequest(HttpRequest hr) : originalRequest(hr) {
 	response = HttpResponse();
 	completed = false;
 }

@@ -6,7 +6,7 @@
 #include <arpa/inet.h>
 #include <sys/errno.h>
 
-//#define PRINT_TEXT_CONN
+#define PRINT_TEXT_CONN
 #ifdef PRINT_TEXT_CONN
 #include <iostream>
 #endif

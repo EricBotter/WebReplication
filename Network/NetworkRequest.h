@@ -12,7 +12,7 @@ private:
 	bool completed;
 
 public:
-	NetworkRequest(HttpRequest&);
+	NetworkRequest(HttpRequest);
 	// Will update this API when chunks are introduced
 	bool isCompleted();
 	bool setCompleted(bool);

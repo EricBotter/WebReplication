@@ -1,13 +1,13 @@
 #include "ProxyThread.h"
 
 ProxyThread::ProxyThread(Connection& c, WebsiteDownloader& downloader)
-		: connection(c), downloader(downloader) { }
+		: connection(c), downloader(downloader), httpReader(NULL), httpWriter(NULL) { }
 
 ProxyThread::~ProxyThread() {
-	if (httpReader != NULL) {
+	if (httpReader != NULL)
 		delete httpReader;
+	if (httpWriter != NULL)
 		delete httpWriter;
-	}
 }
 
 void ProxyThread::run() {
@@ -19,7 +19,7 @@ void ProxyThread::readerFunction() {
 	string reqStr = connection.receive("\r\n\r\n");
 	while (reqStr != "") {
 		HttpRequest hr(reqStr);
-		hr.url = hr.url.substr(7, hr.url.substr(7).find('/'));
+		hr.url = hr.url.substr(hr.url.substr(7).find('/') + 7);
 		NetworkRequest nr(hr);
 		auto temp = new Lockable<NetworkRequest>(nr);
 		queue.push(temp);
@@ -41,7 +41,12 @@ void ProxyThread::writerFunction() {
 }
 
 void ProxyThread::join() {
-	httpWriter->join();
+	if (httpReader->joinable()) {
+		httpWriter->join();
+	}
+	if (httpWriter->joinable()) {
+		httpWriter->join();
+	}
 }
 
 

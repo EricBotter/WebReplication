@@ -15,7 +15,7 @@ public:
 
 	HttpRequest();
 	HttpRequest(string);
-	virtual string compile();
+	string compile();
 };
 
 

@@ -4,6 +4,7 @@
 #include "HttpResponse.h"
 
 HttpResponse::HttpResponse() {
+	content = NULL;
 }
 
 string HttpResponse::compile() {
@@ -60,5 +61,7 @@ HttpResponse::HttpResponse(Connection& connection) {
 }
 
 HttpResponse::~HttpResponse() {
-	delete[] this->content;
+	if (content) {
+		delete[] content;
+	}
 }
