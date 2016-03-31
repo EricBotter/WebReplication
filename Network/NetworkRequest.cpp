@@ -16,11 +16,11 @@ bool NetworkRequest::setCompleted(bool b) {
 	return temp;
 }
 
-HttpRequest& NetworkRequest::getRequest() {
+HttpRequest& NetworkRequest::getHttpRequest() {
 	return originalRequest;
 }
 
-HttpResponse& NetworkRequest::getResponse() {
+HttpResponse& NetworkRequest::getHttpResponse() {
 	return response;
 }
 

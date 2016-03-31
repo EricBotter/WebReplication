@@ -6,7 +6,10 @@
 #include <vector>
 #include <queue>
 #include <condition_variable>
-#include "HttpResponse.h"
+#include "../HTTP/HttpResponse.h"
+#include "../Utilities/ConcurrentQueue.h"
+#include "../Utilities/Lockable.h"
+#include "../Network/NetworkRequest.h"
 
 using namespace std;
 
@@ -15,7 +18,7 @@ public:
 	WebsiteDownloader();
 	~WebsiteDownloader();
 	void setActiveCaching(bool);
-	HttpResponse getWebpage(const string&, const string&);
+	void enqueueRequest(Lockable<NetworkRequest>*);
 
 private:
 	void threadFunction();
@@ -23,14 +26,10 @@ private:
 
 	map<string, vector<string>> resolutions;
 	vector<thread> threads;
-	queue<pair<string, string>> requestQueue;
-	map<pair<string, string>, string> webpageCache;
-
-	mutex requestQueueMutex;
-	condition_variable requestQueueCV;
-	mutex webpageCacheMutex;
-	condition_variable webpageCacheCV;
 	mutex resolutionsMutex;
+
+	ConcurrentQueue<Lockable<NetworkRequest>*> requestQueue;
+
 	bool active = true;
 };
 

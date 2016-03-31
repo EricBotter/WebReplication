@@ -6,7 +6,7 @@
 WebsiteDownloader::WebsiteDownloader() {
 	threads.reserve(N_THREADS);
 	for (int i = 0; i < N_THREADS; ++i) {
-		threads.push_back(thread(threadFunction, this));
+		threads.push_back(thread(&WebsiteDownloader::threadFunction, this));
 	}
 }
 
@@ -18,6 +18,10 @@ WebsiteDownloader::~WebsiteDownloader() {
 }
 
 vector<string> WebsiteDownloader::resolve(string hostname) {
+	if (hostname.find(".peer/") != hostname.npos)
+		//FIXME: horrendous hack
+		return {hostname + ":80"};
+
 	vector<string> hosts;
 	map<string, vector<string>>::iterator it;
 
@@ -49,43 +53,37 @@ vector<string> WebsiteDownloader::resolve(string hostname) {
 void WebsiteDownloader::threadFunction() {
 	string currentHost;
 	Connection* currentConn = NULL;
-	unique_lock<mutex> lock(requestQueueMutex);
 	while (active) {
-		requestQueueCV.wait(lock);
-		if (requestQueue.empty()) {
-			continue;
+		Lockable<NetworkRequest>* requestLockable = requestQueue.pop();
+		if (requestLockable == NULL) {
+			active = false;
+			break;
 		}
-		auto url = requestQueue.front();
-		requestQueue.pop();
-		requestQueueMutex.unlock();
-		requestQueueCV.notify_one();
+		unique_lock<mutex> guard(requestLockable->getMutex());
+		NetworkRequest& request = requestLockable->getObject();
 
-		if (url.first != currentHost) {
+		string host = request.getHttpRequest().headers["Host"];
+		if (host != currentHost) {
 			if (currentConn != NULL)
 				delete currentConn;
-			vector<string> hosts = resolve(url.first);
+			vector<string> hosts = resolve(host);
 			string randomHost = hosts[rand() % hosts.size()];
 
 			currentConn = new Connection(PsrMessage::addressFromAddress(randomHost),
 										 PsrMessage::portFromAddress(randomHost));
 		}
 
-		HttpRequest request;
-		request.version = "HTTP/1.0";
-		request.url = url.second;
-		request.headers = {{"Connection", "keep-alive"}, {"Host", url.first}};
+		HttpRequest requestToSend;
+		requestToSend.version = "HTTP/1.0";
+		requestToSend.url = request.getHttpRequest().url;
+		requestToSend.headers = {{"Connection", "keep-alive"}, {"Host", host}};
 
-		currentConn->sendStr(request.compile());
+		currentConn->sendStr(requestToSend.compile());
 
 		HttpResponse response(*currentConn);
-		if (response.responseCode == "200") {
-			webpageCacheMutex.lock();
-			webpageCache.insert({url, string(response.content, response.contentLength)});
-			webpageCacheMutex.unlock();
-			webpageCacheCV.notify_one();
-		} else {
-			//TODO: figure out a way to signal error
-		}
+		request.getHttpResponse() = response; //omg ugly
+		request.setCompleted(true);
+		requestLockable->getCV().notify_one();
 	}
 }
 
@@ -93,13 +91,8 @@ void WebsiteDownloader::setActiveCaching(bool active) {
 	//TODO: prefetching of possible required objects
 }
 
-HttpResponse WebsiteDownloader::getWebpage(const string& host, const string& page) {
-	unique_lock<mutex> lock(requestQueueMutex);
-	requestQueue.push(make_pair(host, page));
-	lock.unlock();
-	requestQueueCV.notify_one();
-	unique_lock<mutex> pageLock(webpageCacheMutex);
-	webpageCacheCV.wait(pageLock);
-
-	return HttpResponse();
+void WebsiteDownloader::enqueueRequest(Lockable<NetworkRequest>* request) {
+	requestQueue.push(request);
 }
+
+

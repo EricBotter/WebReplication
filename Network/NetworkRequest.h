@@ -18,8 +18,8 @@ public:
 	bool setCompleted(bool);
 
 	// This API is for the Proxy - will not change.
-	HttpRequest& getRequest();
-	HttpResponse& getResponse();
+	HttpRequest& getHttpRequest();
+	HttpResponse& getHttpResponse();
 };
 
 

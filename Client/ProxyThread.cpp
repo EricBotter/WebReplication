@@ -1,18 +1,29 @@
 #include "ProxyThread.h"
 
-ProxyThread::ProxyThread(Connection& c) : connection(c) { }
+ProxyThread::ProxyThread(Connection& c, WebsiteDownloader& downloader)
+		: connection(c), downloader(downloader) { }
+
+ProxyThread::~ProxyThread() {
+	if (httpReader != NULL) {
+		delete httpReader;
+		delete httpWriter;
+	}
+}
 
 void ProxyThread::run() {
-	httpReader = new thread(readerFunction, this);
-	httpWriter = new thread(writerFunction, this);
+	httpReader = new thread(&ProxyThread::readerFunction, this);
+	httpWriter = new thread(&ProxyThread::writerFunction, this);
 }
 
 void ProxyThread::readerFunction() {
 	string reqStr = connection.receive("\r\n\r\n");
 	while (reqStr != "") {
 		HttpRequest hr(reqStr);
+		hr.url = hr.url.substr(7, hr.url.substr(7).find('/'));
 		NetworkRequest nr(hr);
-		queue.push(new Lockable<NetworkRequest>(nr));
+		auto temp = new Lockable<NetworkRequest>(nr);
+		queue.push(temp);
+		downloader.enqueueRequest(temp);
 		reqStr = connection.receive("\r\n\r\n");
 	}
 	queue.push(NULL);
@@ -24,8 +35,13 @@ void ProxyThread::writerFunction() {
 		unique_lock<mutex> guard(request->getMutex());
 		while (!request->getObject().isCompleted())
 			request->getCV().wait(guard);
-		// reply to HTTP server
+		connection.sendStr(request->getObject().getHttpResponse().compile());
 		request = queue.pop();
 	}
 }
+
+void ProxyThread::join() {
+	httpWriter->join();
+}
+
 
