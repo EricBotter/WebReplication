@@ -5,7 +5,27 @@
 
 HttpResponse::HttpResponse() {
 	content = NULL;
+	contentLength = 0;
 }
+
+HttpResponse::HttpResponse(const HttpResponse& hr)
+		: version(hr.version), responseCode(hr.responseCode), responseText(hr.responseText),
+		  headers(hr.headers), contentLength(hr.contentLength) {
+	content = new char[contentLength];
+	memcpy(content, hr.content, contentLength);
+}
+
+HttpResponse& HttpResponse::operator=(const HttpResponse& hr) {
+	version = hr.version;
+	responseCode = hr.responseCode;
+	responseText = hr.responseText;
+	headers = hr.headers;
+	contentLength = hr.contentLength;
+	content = new char[contentLength];
+	memcpy(content, hr.content, contentLength);
+	return *this;
+}
+
 
 string HttpResponse::compile() {
 	stringstream out;
@@ -16,7 +36,7 @@ string HttpResponse::compile() {
 	out << "\r\n";
 
 	string response = out.str();
-	if (this->content != NULL) {
+	if (content != NULL) {
 		response.append(content, contentLength);
 	}
 	return response;
@@ -34,18 +54,18 @@ HttpResponse::HttpResponse(Connection& connection) {
 	version = currentLine.substr(linePrevIndex, lineIndex);
 	linePrevIndex = lineIndex + 1;
 	lineIndex = currentLine.find(" ", linePrevIndex);
-	responseCode = currentLine.substr(linePrevIndex, lineIndex-linePrevIndex);
-	responseText = currentLine.substr(lineIndex+1);
+	responseCode = currentLine.substr(linePrevIndex, lineIndex - linePrevIndex);
+	responseText = currentLine.substr(lineIndex + 1);
 
 	prevIndex = index + 2;
 	index = content.find("\r\n", prevIndex);
-	currentLine = content.substr(prevIndex, index-prevIndex);
+	currentLine = content.substr(prevIndex, index - prevIndex);
 	while (currentLine != "") {
 		lineIndex = currentLine.find(": ");
 		headers.emplace(currentLine.substr(0, lineIndex), currentLine.substr(lineIndex + 2));
 		prevIndex = index + 2;
 		index = content.find("\r\n", prevIndex);
-		currentLine = content.substr(prevIndex, index-prevIndex);
+		currentLine = content.substr(prevIndex, index - prevIndex);
 	}
 
 	auto it = headers.find("Content-Length");
@@ -61,7 +81,7 @@ HttpResponse::HttpResponse(Connection& connection) {
 }
 
 HttpResponse::~HttpResponse() {
-	if (content) {
+	if (content != NULL) {
 		delete[] content;
 	}
 }

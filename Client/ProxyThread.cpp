@@ -42,7 +42,7 @@ void ProxyThread::writerFunction() {
 
 void ProxyThread::join() {
 	if (httpReader->joinable()) {
-		httpWriter->join();
+		httpReader->join();
 	}
 	if (httpWriter->joinable()) {
 		httpWriter->join();

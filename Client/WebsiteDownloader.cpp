@@ -74,6 +74,7 @@ void WebsiteDownloader::threadFunction() {
 		}
 
 		HttpRequest requestToSend;
+		requestToSend.method = "GET";
 		requestToSend.version = "HTTP/1.0";
 		requestToSend.url = request.getHttpRequest().url;
 		requestToSend.headers = {{"Connection", "keep-alive"}, {"Host", host}};

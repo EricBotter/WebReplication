@@ -17,6 +17,8 @@ public:
 	char* content;
 
 	HttpResponse();
+	HttpResponse(const HttpResponse&);
+	HttpResponse& operator=(const HttpResponse&);
 	HttpResponse(Connection&);
 	~HttpResponse();
 	string compile();
