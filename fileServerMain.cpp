@@ -3,6 +3,7 @@
 #include <sstream>
 #include <thread>
 #include <sys/errno.h>
+#include <unistd.h>
 #include "Utilities/Log.h"
 #include "TCP/ServerConnection.h"
 #include "HTTP/HttpRequest.h"
@@ -12,7 +13,8 @@
 
 using namespace std;
 
-#define SERVER_PORT 4100
+#define SERVER_PORT_MIN 20000
+#define SERVER_PORT_MAX 49990
 
 string notfound = "<html><head><title>Not found</title></head><body><h1>Not found</h1>The requested object could not be found on this server</body></html>";
 FileServer fs;
@@ -84,11 +86,33 @@ void connectionThread(Connection* client) {
 	delete client;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+	srand(time(NULL));
+	uint16_t serverport = (uint16_t)(rand() % (SERVER_PORT_MAX - SERVER_PORT_MIN) + SERVER_PORT_MIN);
+
+	//argument parsing
+	int getoptResult;
+	while ((getoptResult = getopt(argc, argv, "p:")) != -1) {
+		switch (getoptResult) {
+			case 'p':
+				sscanf(optarg, "%hu", &serverport);
+				break;
+			case '?':
+				if (optopt == 'p')
+					Log::e("Option -p requires an argument.\n");
+				else if (isprint(optopt))
+					Log::w("Unknown option `" + to_string(optopt) + "'.\n");
+				break;
+			default:
+				Log::f("Error while parsing command line args: ");
+		}
+	}
+
 	Log::d("Loading websites...");
 	fs.init();
 	Log::d("Announcing sites to resolver");
-	Connection* c = new Connection("127.0.0.1", 3921, "127.0.0.1", SERVER_PORT);
+	//FIXME: hardcoded resolver address and port
+	Connection* c = new Connection("127.0.0.1", 3921, "127.0.0.1", serverport);
 	PsrMessage pm;
 	pm.setSites(fs.getSiteList());
 	c->sendStr(pm.compile());
@@ -99,8 +123,8 @@ int main() {
 
 	delete c;
 
-	Log::d("Starting server on custom port");
-	ServerConnection sc(SERVER_PORT);
+	Log::d("Starting server on port " + to_string(serverport));
+	ServerConnection sc(serverport);
 	Log::d("Server started. Waiting for connection.");
 
 	Connection* client;
