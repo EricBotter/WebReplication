@@ -18,7 +18,7 @@ WebsiteDownloader::~WebsiteDownloader() {
 }
 
 vector<string> WebsiteDownloader::resolve(string hostname) {
-	if (hostname.find(".peer/") != hostname.npos)
+	if (hostname.find(".peer") == string::npos)
 		//FIXME: horrendous hack
 		return {hostname + ":80"};
 

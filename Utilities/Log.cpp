@@ -28,4 +28,6 @@ void Log::log(string message, LogLevel level) {
 		file.close();
 	}
 	cout << ss.str();
+
+	cout.flush();
 }

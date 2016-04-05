@@ -14,8 +14,7 @@ add_executable(Resolver ${SOURCE_FILES_RESOLVER})
 set(SOURCE_FILES_FILESERVER fileServerMain.cpp ${SOURCE_FILES_COMMON} HTTP/FileServer.cpp HTTP/FileServer.h)
 add_executable(FileServer ${SOURCE_FILES_FILESERVER})
 
-set(SOURCE_FILES_TEST test/testMain.cpp ${SOURCE_FILES_COMMON})
-add_executable(Test ${SOURCE_FILES_TEST})
-
 set(SOURCE_FILES_SIGNER fileSigner.cpp ${SOURCE_FILES_COMMON})
 add_executable(FileSigner ${SOURCE_FILES_SIGNER})
+
+file(COPY test DESTINATION . FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
