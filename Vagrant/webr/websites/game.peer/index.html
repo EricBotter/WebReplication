@@ -1,0 +1,219 @@
+﻿﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>HTML5 game</title>
+<script src="pixi.js"></script>
+<script src="game.js"></script>
+<style>
+body { margin:0; padding:0; }
+canvas { display:block; }
+</style>
+</head>
+<body>
+<script>
+var renderer = new PIXI.CanvasRenderer(document.body.clientWidth, window.innerHeight);
+document.body.appendChild(renderer.view);
+
+var stage = new PIXI.Stage(0xD0D0FF, true);
+
+var ammoText = new PIXI.Text("800", {font:"20px Arial"});
+var gun = new Gun(new Point(40, renderer.height-130), 1000, 15);
+var stand = new PIXI.Sprite(textures.stand);
+var sand = new PIXI.TilingSprite(textures.sand, renderer.width, 100);
+
+//Texture placing
+stand.position.x = 32;
+stand.position.y = renderer.height-130;
+sand.position.x = 0;
+sand.position.y = renderer.height-100;
+ammoText.position.x = ammoText.position.y = 10;
+
+//Adding all Sprites
+stage.addChild(gun);
+stage.addChild(stand);
+stage.addChild(sand);
+stage.addChild(ammoText);
+
+stage.mousemove = stage.touchmove = function(){
+    if (stage.getMousePosition().x-gun.position.x > 0 && stage.getMousePosition().y-gun.position.y < 30)
+        gun.rotation = Math.atan((stage.getMousePosition().y-gun.position.y)/(stage.getMousePosition().x-gun.position.x));
+};
+stage.mousedown = stage.touchstart = function(){
+    if (!Game.lost) gun.firing = true;
+};
+stage.mouseup = stage.touchend = function(){
+    gun.firing = false;
+};
+//end-section
+
+//Starts the drawer-loop
+var fps = 20;
+Game.animation = window.setInterval(function() {
+    requestAnimationFrame(animate);
+}, 1000 / fps);
+
+//Target spawners
+Game.spawners.push(window.setInterval(function() {
+    var ufo = new Ufo(
+        new Point(renderer.width, Math.random()*(renderer.height-300)+70),
+        30+Math.floor(Game.enemiesHit/20)*10,
+        Math.random()*0.1+0.1
+    );
+    Game.addEnemy(ufo);
+}, 750));
+Game.spawners.push(window.setInterval(function() {
+    var missile = new Missile(
+        new Point(Math.random()*(renderer.width*2/5)+100, -100),
+        20000,
+        0.025
+    );
+    Game.addEnemy(missile);
+}, 35000));
+
+//Game engine
+var lastTime = (new Date()).getTime(), maxDeltaTime = 0;
+var msLeft = 1000/gun.firingRate;
+Game.engine = window.setInterval(function() {
+    now = (new Date()).getTime();
+    deltaTime = now - lastTime;
+    lastTime = now;
+    if (Game.enemiesHit != 0)
+        if (deltaTime > maxDeltaTime)
+            maxDeltaTime = deltaTime;
+    //Bullet spawning
+    if (gun.firing) {
+        msLeft -= deltaTime;
+        if (gun.ammo > 0)
+        while (msLeft < 0)
+        {
+            var temp = new Bullet(
+                new Point(gun.position.x + msLeft * 2 * Math.cos(gun.rotation), gun.position.y + msLeft * 2 * Math.sin(gun.rotation)),
+                gun.rotation,
+                10,
+                (gun.hyperTimer > 0)
+            );
+            Game.addBullet(temp);
+            --gun.ammo;
+            msLeft += 1000/gun.firingRate;
+        }
+    }
+    
+    //Extermination mode
+    if (Game.consecutives >= 100)
+        gun.hyperTimer = 5000;
+    if (gun.hyperTimer > 0)
+    {
+        Game.consecutives = 0;
+        gun.hyperTimer -= deltaTime;
+    }
+    
+    //Bullet movement
+    for (var i=0; i<Game.bullets.length; ++i)
+    {
+        var distance = 2 * deltaTime;
+        var b = Game.bullets[i];
+        b.position.x += distance*Math.cos(b.rotation);
+        b.position.y += distance*Math.sin(b.rotation);
+        if (b.position.x > renderer.width ||
+            b.position.x < 0 ||
+            b.position.y > renderer.height ||
+            b.position.y < 0)
+        {
+            Game.removeBulletAt(i--);
+        }
+    }
+
+    //Enemy movement
+    for (var i=0; i<Game.enemies.length; ++i)
+        Game.enemies[i].advance(deltaTime);
+
+    //Collision handling                  <<<----------------------- CERCA DISTANZA TRA PUNTO E SEGMENTO (ODDIO CHE CASINO)
+    for (var i=0; i<Game.bullets.length; ++i)
+    {
+        for (var j=0; j<Game.enemies.length; ++j)
+        {
+            if (Game.bullets[i].position.x - Game.enemies[j].position.x < Game.enemies[j].width/2 &&
+                Game.bullets[i].position.x - Game.enemies[j].position.x > -Game.enemies[j].width/2 &&
+                Game.bullets[i].position.y - Game.enemies[j].position.y < Game.enemies[j].height/2 &&
+                Game.bullets[i].position.y - Game.enemies[j].position.y > -Game.enemies[j].height/2)
+            {
+                ++Game.consecutives;
+                ++gun.shotsOnTarget;
+                Game.enemies[j].life -= Game.bullets[i].damage;
+                if (Game.enemies[j].life <= 0)
+                    Game.enemies[j--].die(true);
+                else
+                {
+                    Game.removeBulletAt(i--);
+                    break;
+                }
+            }
+        }
+    }
+    
+    if (gun.ammo <= 0)
+        Game.lose("You ran out of ammo.");
+    
+    if (new Date().getSeconds()%10 == 0)
+        maxDeltaTime = 0;
+}, 10); //end main-loop
+
+function animate() {
+    //HUD update
+    ammoText.setText("Ammo: " + gun.ammo + "\nEnemies destroyed: "+Game.enemiesHit + "\nEnemies missed: "+ Game.enemiesMiss + 
+        (gun.hyperTimer > 0 ? "\nExtermination mode! ("+(gun.hyperTimer/1000.0)+"s rimasti)" : "\nLoading extermination: " + Game.consecutives + "%") + 
+        "\nEngine runs: at least " + (Game.enemiesHit > 0 ? Math.floor(1000/maxDeltaTime) : '???') + " times/sec" + 
+        "\nEnemies on screen: " + Game.enemies.length +
+        "\nBullets on screen: " + Game.bullets.length);
+    
+    //Gun animation
+    if (gun.firing)
+        gun.texture = (Math.floor((new Date()).getMilliseconds() / 100) % 2 == 0 ? textures.gun2 : textures.gun1);
+    
+    //Life labels update
+    for (var i=0; i<Game.enemies.length; ++i)
+        Game.enemies[i].text.setText(Game.enemies[i].life);
+    
+    //Explosions update
+    for (var i=0; i<Game.dying.length; ++i)
+    {
+        var d = Game.dying[i];
+        if (d.counter < 0)
+        {
+            d.visible = false;
+            Game.dying.splice(i, 1); --i;
+            continue;
+        }
+        var temp = d.texture; //Qua sotto -- occhio a "d.rotation"
+        d.texture = (Math.floor(d.rotation = (new Date()).getMilliseconds() / 100) % 2 == 0 ? textures.exp1 : textures.exp2);
+        if (d.texture != temp)
+            --d.counter;
+    }
+    
+    //Extermination mode update
+    if (gun.hyperTimer > 0)
+        stage.setBackgroundColor(0xFFFFFF);
+    else
+        stage.setBackgroundColor(0xD0D0FF);
+
+    renderer.render(stage);
+
+    //requestAnimationFrame(animate);
+}
+
+window.onresize = function() {
+    renderer.width = renderer.view.width = document.body.clientWidth;
+    renderer.height = renderer.view.height = window.innerHeight;
+    
+    //Object repositioning
+    gun.position.x = 40;
+    gun.position.y = renderer.height-130;
+    stand.position.x = 32;
+    stand.position.y = renderer.height-130;
+    sand.position.x = 0;
+    sand.position.y = renderer.height-100;
+}
+</script>
+</body>
+</html>
