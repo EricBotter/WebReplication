@@ -11,6 +11,7 @@ ProxyThread::~ProxyThread() {
 }
 
 void ProxyThread::run() {
+	//FIXME: run HttpReader synchronously
 	httpReader = new thread(&ProxyThread::readerFunction, this);
 	httpWriter = new thread(&ProxyThread::writerFunction, this);
 }
