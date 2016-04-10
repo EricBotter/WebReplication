@@ -24,10 +24,13 @@ HttpResponse& NetworkRequest::getHttpResponse() {
 	return response;
 }
 
+void NetworkRequest::setHttpRequest(const HttpRequest& hr) {
+	originalRequest = hr;
+}
 
-
-
-
+void NetworkRequest::setHttpResponse(const HttpResponse& hr) {
+	response = hr;
+}
 
 
 

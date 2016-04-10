@@ -20,6 +20,8 @@ public:
 	// This API is for the Proxy - will not change.
 	HttpRequest& getHttpRequest();
 	HttpResponse& getHttpResponse();
+	void setHttpRequest(const HttpRequest&);
+	void setHttpResponse(const HttpResponse&);
 };
 
 

@@ -35,22 +35,21 @@ void HttpConnection::writerFunction() {
 }
 
 void HttpConnection::readerFunction() {
-	Lockable<NetworkRequest>* request = requestQueue.pop();
-	responseQueue.push(request);
+	Lockable<NetworkRequest>* request = responseQueue.pop();
 	while (request != NULL) {
 		HttpResponse hr(connection);
 		unique_lock<mutex> guard(request->getMutex());
 
 		if (hr.responseCode == "200" || //assume request succeeded and all data is here
 				hr.responseCode[0] == '4') {  //assume request failed
-			request->getObject().getHttpResponse() = hr;
+			request->getObject().setHttpResponse(hr);
 			request->getObject().setCompleted(true);
 			request->getCV().notify_one();
 //		} else if (hr.responseCode == "206") { //request is incomplete
 //			//TODO: handle chunked content by auto-queuing next request
 		}
 
-		request = requestQueue.pop();
+		request = responseQueue.pop();
 	}
 }
 
