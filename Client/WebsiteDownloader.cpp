@@ -1,7 +1,7 @@
 #include "WebsiteDownloader.h"
 #include "../PSR/PsrMessage.h"
 
-#define N_THREADS 8
+#define N_THREADS 4
 
 WebsiteDownloader::WebsiteDownloader() {
 	threads.reserve(N_THREADS);
@@ -51,8 +51,11 @@ vector<string> WebsiteDownloader::resolve(string hostname) {
 }
 
 void WebsiteDownloader::threadFunction() {
+#ifndef NEW_NETWORK
 	string currentHost;
 	Connection* currentConn = NULL;
+#endif
+
 	while (active) {
 		Lockable<NetworkRequest>* requestLockable = requestQueue.pop();
 		if (requestLockable == NULL) {
@@ -61,8 +64,31 @@ void WebsiteDownloader::threadFunction() {
 		}
 		unique_lock<mutex> guard(requestLockable->getMutex());
 		NetworkRequest& request = requestLockable->getObject();
-
 		string host = request.getHttpRequest().headers["Host"];
+
+		HttpRequest requestToSend;
+		requestToSend.method = "GET";
+		requestToSend.version = "HTTP/1.0";
+		requestToSend.url = request.getHttpRequest().url;
+		requestToSend.headers = {{"Connection", "keep-alive"},
+								 {"Host",       host}};
+
+#ifdef NEW_NETWORK
+		request.setHttpRequest(requestToSend);
+		vector<string> resolutions = resolve(host);
+		string randomServer = resolutions[rand() % resolutions.size()];
+
+		connectionsMutex.lock();
+		if (connections.find(randomServer) != connections.end()) {
+			connections.insert({randomServer, new HttpConnection(
+					PsrMessage::addressFromAddress(randomServer),
+					PsrMessage::portFromAddress(randomServer)
+			)});
+			connections[randomServer]->run();
+		}
+		connections[randomServer]->enqueueRequest(requestLockable);
+		connectionsMutex.unlock();
+#else
 		if (host != currentHost) {
 			if (currentConn != NULL)
 				delete currentConn;
@@ -73,18 +99,13 @@ void WebsiteDownloader::threadFunction() {
 										 PsrMessage::portFromAddress(randomHost));
 		}
 
-		HttpRequest requestToSend;
-		requestToSend.method = "GET";
-		requestToSend.version = "HTTP/1.0";
-		requestToSend.url = request.getHttpRequest().url;
-		requestToSend.headers = {{"Connection", "keep-alive"}, {"Host", host}};
-
 		currentConn->sendStr(requestToSend.compile());
 
 		HttpResponse response(*currentConn);
-		request.getHttpResponse() = response; //omg ugly
+		request.setHttpResponse(response);
 		request.setCompleted(true);
 		requestLockable->getCV().notify_one();
+#endif
 	}
 }
 

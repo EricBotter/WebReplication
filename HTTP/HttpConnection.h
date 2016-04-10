@@ -11,7 +11,7 @@ using namespace std;
 
 class HttpConnection {
 public:
-	HttpConnection(Connection&);
+	HttpConnection(string, uint16_t);
 	~HttpConnection();
 	void run();
 	void enqueueRequest(Lockable<NetworkRequest>*);
@@ -25,7 +25,7 @@ private:
 	ConcurrentQueue<Lockable<NetworkRequest>*> responseQueue;
 	thread* httpReader;
 	thread* httpWriter;
-	Connection& connection;
+	Connection* connection;
 };
 
 

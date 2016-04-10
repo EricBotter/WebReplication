@@ -1,6 +1,8 @@
 #ifndef THESIS_WEBSITEDOWNLOADER_H
 #define THESIS_WEBSITEDOWNLOADER_H
 
+//#define NEW_NETWORK
+
 #include <string>
 #include <thread>
 #include <vector>
@@ -10,6 +12,7 @@
 #include "../Utilities/ConcurrentQueue.h"
 #include "../Utilities/Lockable.h"
 #include "../Network/NetworkRequest.h"
+#include "../HTTP/HttpConnection.h"
 
 using namespace std;
 
@@ -29,6 +32,11 @@ private:
 	mutex resolutionsMutex;
 
 	ConcurrentQueue<Lockable<NetworkRequest>*> requestQueue;
+
+#ifdef NEW_NETWORK
+	mutex connectionsMutex;
+	map<string, HttpConnection*> connections;
+#endif
 
 	bool active = true;
 };

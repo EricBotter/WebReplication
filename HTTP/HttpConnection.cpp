@@ -1,9 +1,12 @@
 #include "HttpConnection.h"
 
-HttpConnection::HttpConnection(Connection& c)
-		: connection(c), httpReader(NULL), httpWriter(NULL) { }
+HttpConnection::HttpConnection(string host, uint16_t port)
+		: httpReader(NULL), httpWriter(NULL) {
+	connection = new Connection(host, port);
+}
 
 HttpConnection::~HttpConnection() {
+	delete connection;
 	if (httpWriter != NULL)
 		delete httpWriter;
 	if (httpReader != NULL) {
@@ -24,11 +27,7 @@ void HttpConnection::writerFunction() {
 	Lockable<NetworkRequest>* request = requestQueue.pop();
 	responseQueue.push(request);
 	while (request != NULL) {
-//		unique_lock<mutex> guard(request->getMutex());
-//		while (!request->getObject().isCompleted())
-//			request->getCV().wait(guard);
-		connection.sendStr(request->getObject().getHttpRequest().compile());
-
+		connection->sendStr(request->getObject().getHttpRequest().compile());
 		request = requestQueue.pop();
 	}
 	responseQueue.push(NULL);
@@ -37,7 +36,7 @@ void HttpConnection::writerFunction() {
 void HttpConnection::readerFunction() {
 	Lockable<NetworkRequest>* request = responseQueue.pop();
 	while (request != NULL) {
-		HttpResponse hr(connection);
+		HttpResponse hr(*connection);
 		unique_lock<mutex> guard(request->getMutex());
 
 		if (hr.responseCode == "200" || //assume request succeeded and all data is here
@@ -61,7 +60,3 @@ void HttpConnection::join() {
 		httpWriter->join();
 	}
 }
-
-
-
-
