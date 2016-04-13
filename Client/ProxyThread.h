@@ -21,7 +21,7 @@ private:
 	void readerFunction();
 	void writerFunction();
 
-	ConcurrentQueue<Lockable<NetworkRequest>*> queue;
+	ConcurrentQueue<NetworkRequest*> queue;
 	thread* httpReader;
 	thread* httpWriter;
 	Connection& connection;

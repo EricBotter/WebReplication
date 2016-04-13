@@ -4,18 +4,22 @@
 
 #include "../HTTP/HttpRequest.h"
 #include "../HTTP/HttpResponse.h"
+#include "../Utilities/Lockable.h"
 
 class NetworkRequest {
 private:
 	HttpRequest originalRequest;
 	HttpResponse response;
 	bool completed;
+	mutex completedMutex;
+	condition_variable completedCV;
 
 public:
 	NetworkRequest(HttpRequest);
 	// Will update this API when chunks are introduced
 	bool isCompleted();
-	bool setCompleted(bool);
+	void setCompleted();
+	void waitForCompleted();
 
 	// This API is for the Proxy - will not change.
 	HttpRequest& getHttpRequest();

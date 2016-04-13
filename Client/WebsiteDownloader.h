@@ -1,7 +1,7 @@
 #ifndef THESIS_WEBSITEDOWNLOADER_H
 #define THESIS_WEBSITEDOWNLOADER_H
 
-//#define NEW_NETWORK
+#define NEW_NETWORK
 
 #include <string>
 #include <thread>
@@ -21,7 +21,7 @@ public:
 	WebsiteDownloader();
 	~WebsiteDownloader();
 	void setActiveCaching(bool);
-	void enqueueRequest(Lockable<NetworkRequest>*);
+	void enqueueRequest(NetworkRequest*);
 
 private:
 	void threadFunction();
@@ -31,7 +31,7 @@ private:
 	vector<thread> threads;
 	mutex resolutionsMutex;
 
-	ConcurrentQueue<Lockable<NetworkRequest>*> requestQueue;
+	ConcurrentQueue<NetworkRequest*> requestQueue;
 
 #ifdef NEW_NETWORK
 	mutex connectionsMutex;

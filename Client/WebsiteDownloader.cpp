@@ -57,36 +57,34 @@ void WebsiteDownloader::threadFunction() {
 #endif
 
 	while (active) {
-		Lockable<NetworkRequest>* requestLockable = requestQueue.pop();
-		if (requestLockable == NULL) {
+		NetworkRequest* request = requestQueue.pop();
+		if (request == NULL) {
 			active = false;
 			break;
 		}
-		unique_lock<mutex> guard(requestLockable->getMutex());
-		NetworkRequest& request = requestLockable->getObject();
-		string host = request.getHttpRequest().headers["Host"];
+		string host = request->getHttpRequest().headers["Host"];
 
 		HttpRequest requestToSend;
 		requestToSend.method = "GET";
 		requestToSend.version = "HTTP/1.0";
-		requestToSend.url = request.getHttpRequest().url;
+		requestToSend.url = request->getHttpRequest().url;
 		requestToSend.headers = {{"Connection", "keep-alive"},
 								 {"Host",       host}};
 
 #ifdef NEW_NETWORK
-		request.setHttpRequest(requestToSend);
+		request->setHttpRequest(requestToSend);
 		vector<string> resolutions = resolve(host);
 		string randomServer = resolutions[rand() % resolutions.size()];
 
 		connectionsMutex.lock();
-		if (connections.find(randomServer) != connections.end()) {
+		if (connections.find(randomServer) == connections.end()) {
 			connections.insert({randomServer, new HttpConnection(
 					PsrMessage::addressFromAddress(randomServer),
 					PsrMessage::portFromAddress(randomServer)
 			)});
 			connections[randomServer]->run();
 		}
-		connections[randomServer]->enqueueRequest(requestLockable);
+		connections[randomServer]->enqueueRequest(request);
 		connectionsMutex.unlock();
 #else
 		if (host != currentHost) {
@@ -113,7 +111,7 @@ void WebsiteDownloader::setActiveCaching(bool active) {
 	//TODO: prefetching of possible required objects
 }
 
-void WebsiteDownloader::enqueueRequest(Lockable<NetworkRequest>* request) {
+void WebsiteDownloader::enqueueRequest(NetworkRequest* request) {
 	requestQueue.push(request);
 }
 

@@ -21,8 +21,7 @@ void ProxyThread::readerFunction() {
 	while (reqStr != "") {
 		HttpRequest hr(reqStr);
 		hr.url = hr.url.substr(hr.url.substr(7).find('/') + 7);
-		NetworkRequest nr(hr);
-		auto temp = new Lockable<NetworkRequest>(nr);
+		auto temp = new NetworkRequest(hr);
 		queue.push(temp);
 		downloader.enqueueRequest(temp);
 		reqStr = connection.receive("\r\n\r\n");
@@ -31,13 +30,10 @@ void ProxyThread::readerFunction() {
 }
 
 void ProxyThread::writerFunction() {
-	Lockable<NetworkRequest>* request = queue.pop();
-	while (request != NULL) {
-		unique_lock<mutex> guard(request->getMutex());
-		while (!request->getObject().isCompleted())
-			request->getCV().wait(guard);
-		connection.sendStr(request->getObject().getHttpResponse().compile());
-		request = queue.pop();
+	NetworkRequest* request;
+	while ((request = queue.pop())) {
+		request->waitForCompleted();
+		connection.sendStr(request->getHttpResponse().compile());
 	}
 }
 

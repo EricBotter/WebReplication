@@ -14,15 +14,15 @@ public:
 	HttpConnection(string, uint16_t);
 	~HttpConnection();
 	void run();
-	void enqueueRequest(Lockable<NetworkRequest>*);
+	void enqueueRequest(NetworkRequest*);
 	void join();
 
 private:
 	void readerFunction();
 	void writerFunction();
 
-	ConcurrentQueue<Lockable<NetworkRequest>*> requestQueue;
-	ConcurrentQueue<Lockable<NetworkRequest>*> responseQueue;
+	ConcurrentQueue<NetworkRequest*> requestQueue;
+	ConcurrentQueue<NetworkRequest*> responseQueue;
 	thread* httpReader;
 	thread* httpWriter;
 	Connection* connection;

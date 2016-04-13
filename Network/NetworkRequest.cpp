@@ -10,10 +10,10 @@ bool NetworkRequest::isCompleted() {
 	return completed;
 }
 
-bool NetworkRequest::setCompleted(bool b) {
-	bool temp = completed;
-	completed = b;
-	return temp;
+void NetworkRequest::setCompleted() {
+	lock_guard<mutex> guard(completedMutex);
+	completed = true;
+	completedCV.notify_one();
 }
 
 HttpRequest& NetworkRequest::getHttpRequest() {
@@ -32,6 +32,9 @@ void NetworkRequest::setHttpResponse(const HttpResponse& hr) {
 	response = hr;
 }
 
-
-
+void NetworkRequest::waitForCompleted() {
+	unique_lock<mutex> guard(completedMutex);
+	while (!completed)
+		completedCV.wait(guard);
+}
 
