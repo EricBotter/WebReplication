@@ -13,6 +13,8 @@ private:
 	size_t recvBufPos;
 	char recvBuffer[RECV_BUFFER_SIZE];
 	int errorCode;
+	string newReceive(const string&);
+
 public:
 	//To be used by servers
 	Connection(int);

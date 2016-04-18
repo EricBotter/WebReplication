@@ -19,9 +19,8 @@ void connectionThread(Connection* browser) {
 	pt.runAndJoin();
 //	pt.run();
 //	pt.join();
-	Log::t("X Threads ended");
 	delete browser;
-	Log::t("# Browser deleted");
+	Log::t("ProxyThread ended. Connection with browser closed.");
 }
 
 int main() {

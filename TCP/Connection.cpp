@@ -120,6 +120,40 @@ int Connection::sendStr(const string& message) const {
 
 string Connection::receive(const string& delimiter) {
 	string out;
+	size_t index = 0;
+	ssize_t size;
+	if (recvBufPos != 0) {
+		out.append(recvBuffer, recvBufPos);
+		index = out.find(delimiter);
+		if (index != out.npos) {
+			index += delimiter.length();
+			recvBufPos = out.length() - index;
+			memcpy(recvBuffer, out.c_str() + index, recvBufPos);
+			out.erase(index);
+			return out;
+		}
+	}
+	recvBufPos = 0;
+	for (;;) {
+		size = recv(sockfd, recvBuffer, RECV_BUFFER_SIZE, 0);
+		if (size <= 0) {
+			return "";
+		}
+		out.append(recvBuffer, (size_t)size);
+		index = out.find(delimiter, out.length() == size ? 0 : out.length() - size - delimiter.length());
+		if (index != out.npos) {
+			index += delimiter.length();
+			recvBufPos = out.length() - index;
+			memcpy(recvBuffer, out.c_str() + index, recvBufPos);
+			out.erase(index);
+			return out;
+		}
+	}
+}
+
+/* old receive
+string Connection::receive(const string& delimiter) {
+	string out;
 	ssize_t size;
 	char* end = strstr(recvBuffer, delimiter.c_str());
 	if (end != NULL) {
@@ -134,6 +168,8 @@ string Connection::receive(const string& delimiter) {
 			Log::t("Connection " + to_string(sockfd) + " received " + to_string(out.length()) + " bytes (buffered)");
 #endif
 			return out;
+		} else {
+			recvBufPos = 0;
 		}
 	}
 	do {
@@ -160,6 +196,7 @@ string Connection::receive(const string& delimiter) {
 		}
 	} while (1);
 }
+*/
 
 string Connection::receive(size_t bytes) {
 	string out;

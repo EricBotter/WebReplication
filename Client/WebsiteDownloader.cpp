@@ -1,5 +1,6 @@
 #include "WebsiteDownloader.h"
 #include "../PSR/PsrMessage.h"
+#include "../Utilities/Log.h"
 
 #define N_THREADS 4
 
@@ -85,6 +86,7 @@ void WebsiteDownloader::threadFunction() {
 			connections[randomServer]->run();
 		}
 		connections[randomServer]->enqueueRequest(request);
+		Log::t("Passed request for url <" + request->getHttpRequest().headers["Host"] + request->getHttpRequest().url + "> to host " + randomServer);
 		connectionsMutex.unlock();
 #else
 		if (host != currentHost) {

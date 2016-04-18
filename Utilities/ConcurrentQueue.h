@@ -4,6 +4,7 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+#include "Log.h"
 
 using namespace std;
 
@@ -12,20 +13,21 @@ class ConcurrentQueue {
 public:
 	void push(const T& t) {
 		unique_lock<mutex> lock(queueMutex);
+//		Log::t("queuesize " + to_string(q.size()));
 		q.push(t);
-		queueCV.notify_one();
+		queueCV.notify_one(); //all doesn't change anything
 	}
 
-	T& pop() {
+	T pop() {
 		unique_lock<mutex> lock(queueMutex);
 		while (q.empty())
 			queueCV.wait(lock);
-		T& temp = q.front();
+		T temp = q.front();
 		q.pop();
 		return temp;
 	}
 
-	T& front() {
+	T front() {
 		unique_lock<mutex> lock(queueMutex);
 		while (q.empty())
 			queueCV.wait(lock);
