@@ -15,6 +15,7 @@ public:
 	ProxyThread(Connection&, WebsiteDownloader&);
 	~ProxyThread();
 	void run();
+	void runAndJoin();
 	void join();
 
 private:

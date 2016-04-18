@@ -7,14 +7,13 @@
 #include <sys/errno.h>
 
 //#define PRINT_TEXT_CONN
-#ifdef PRINT_TEXT_CONN
-#include <iostream>
-#endif
 
 #include "Connection.h"
 #include "../Utilities/Log.h"
 
-Connection::Connection(int sockfd) : sockfd(sockfd), recvBufPos(0) { }
+Connection::Connection(int sockfd) : sockfd(sockfd), recvBufPos(0) {
+	Log::t("Creating Connection from existing socket " + to_string(sockfd));
+}
 
 Connection::Connection(const string& host, uint16_t port) : recvBufPos(0) {
 	addrinfo host_info;
@@ -24,29 +23,38 @@ Connection::Connection(const string& host, uint16_t port) : recvBufPos(0) {
 	host_info.ai_family = AF_INET;
 	host_info.ai_socktype = SOCK_STREAM;
 
+	Log::t("Connecting to " + host + " on port " + to_string(port));
+
 	int status;
-	stringstream ss;
-	ss << port;
-	status = getaddrinfo(host.c_str(), ss.str().c_str(), &host_info, &host_info_list);
+	status = getaddrinfo(host.c_str(), to_string(port).c_str(), &host_info, &host_info_list);
 	if (status != 0) {
+		errorCode = status == EAI_SYSTEM ? errno : -1;
 		Log::f("Error while DNS:");
 		Log::f(gai_strerror(status));
+		return;
 	}
 
 	sockfd = socket(host_info_list->ai_family, host_info_list->ai_socktype, host_info_list->ai_protocol);
 	if (sockfd < 0) {
+		errorCode = errno;
 		Log::f("Unable to open socket: ");
 		Log::f(strerror(errno));
+		return;
 	}
 
 	status = connect(sockfd, host_info_list->ai_addr, host_info_list->ai_addrlen);
 	if (status != 0) {
+		errorCode = errno;
 		Log::f("Error while connecting:");
 		Log::f(strerror(errno));
+		return;
 	}
+
+	Log::t("Connection to host " + host + ':' + to_string(port) + " started on socket " + to_string(sockfd));
 }
 
-Connection::Connection(const string& destHost, uint16_t destPort, const string& sourceHost, uint16_t sourcePort) : recvBufPos(0) {
+Connection::Connection(const string& destHost, uint16_t destPort, const string& sourceHost, uint16_t sourcePort)
+		: recvBufPos(0) {
 	addrinfo host_info = {};
 	addrinfo* host_info_list;
 	sockaddr_in sin = {};
@@ -56,43 +64,58 @@ Connection::Connection(const string& destHost, uint16_t destPort, const string& 
 	sin.sin_port = htons(sourcePort);
 	inet_aton(sourceHost.c_str(), &sin.sin_addr);
 
+	Log::t("Connecting to " + destHost + " on port " + to_string(destPort) + ", from source address " + sourceHost +
+		   ':' + to_string(sourcePort));
+
 	int status;
-	stringstream ss;
-	ss << destPort;
-	status = getaddrinfo(destHost.c_str(), ss.str().c_str(), &host_info, &host_info_list);
+	status = getaddrinfo(destHost.c_str(), to_string(destPort).c_str(), &host_info, &host_info_list);
 	if (status != 0) {
+		errorCode = status == EAI_SYSTEM ? errno : -1;
 		Log::f("Error while DNS:");
 		Log::f(gai_strerror(status));
+		return;
 	}
 
 	sockfd = socket(host_info_list->ai_family, host_info_list->ai_socktype, host_info_list->ai_protocol);
 	if (sockfd < 0) {
+		errorCode = errno;
 		Log::f("Unable to open socket: ");
 		Log::f(strerror(errno));
+		return;
 	}
 
 	status = bind(sockfd, (sockaddr*)&sin, sizeof(sin));
 	if (status != 0) {
-		Log::f("Error while connecting:");
+		errorCode = errno;
+		Log::f("Error while binding to specified address:");
 		Log::f(strerror(errno));
+		return;
 	}
 
 	status = connect(sockfd, host_info_list->ai_addr, host_info_list->ai_addrlen);
 	if (status != 0) {
+		errorCode = errno;
 		Log::f("Error while connecting:");
 		Log::f(strerror(errno));
+		return;
 	}
+
+	Log::t("Connection established on socket " + to_string(sockfd));
 }
 
 Connection::~Connection() {
+	Log::t("Closing connection " + to_string(sockfd));
 	close(sockfd);
 }
 
 int Connection::sendStr(const string& message) const {
+	int bytes = send(sockfd, message.c_str(), message.length(), 0);
 #ifdef PRINT_TEXT_CONN
-	cout << "@Sent: " << message;
+	Log::t("Connection " + to_string(sockfd) + " sent:\n" + message);
+#else
+	Log::t("Connection " + to_string(sockfd) + " sent " + to_string(bytes) + '/' + to_string(message.length()) + " bytes");
 #endif
-	return send(sockfd, message.c_str(), message.length(), 0);
+	return bytes;
 }
 
 string Connection::receive(const string& delimiter) {
@@ -106,7 +129,9 @@ string Connection::receive(const string& delimiter) {
 			recvBufPos = end - recvBuffer;
 			memmove(recvBuffer, end, recvBufPos);
 #ifdef PRINT_TEXT_CONN
-			cout << "@Received (buffered): " << out;
+			Log::t("Connection " + to_string(sockfd) + " received (buffered):\n" + out);
+#else
+			Log::t("Connection " + to_string(sockfd) + " received " + to_string(out.length()) + " bytes (buffered)");
 #endif
 			return out;
 		}
@@ -127,7 +152,9 @@ string Connection::receive(const string& delimiter) {
 			recvBufPos = recvBuffer + size - end;
 			memmove(recvBuffer, end, recvBufPos);
 #ifdef PRINT_TEXT_CONN
-			cout << "@Received: " << out;
+			Log::t("Connection " + to_string(sockfd) + " received:\n" + out);
+#else
+			Log::t("Connection " + to_string(sockfd) + " received " + to_string(out.length()) + " bytes");
 #endif
 			return out;
 		}
@@ -142,7 +169,9 @@ string Connection::receive(size_t bytes) {
 		recvBufPos -= bytes;
 		memmove(recvBuffer, recvBuffer + bytes, recvBufPos);
 #ifdef PRINT_TEXT_CONN
-		cout << "@Received (buffered): " << out;
+		Log::t("Connection " + to_string(sockfd) + " received (buffered):\n" + out);
+#else
+		Log::t("Connection " + to_string(sockfd) + " received " + to_string(out.length()) + " bytes (buffered)");
 #endif
 		return out;
 	}
@@ -160,23 +189,31 @@ string Connection::receive(size_t bytes) {
 		} else {
 			out.append(recvBuffer, bytes);
 			recvBufPos = size - bytes;
-			memmove(recvBuffer, recvBuffer+bytes, recvBufPos);
+			memmove(recvBuffer, recvBuffer + bytes, recvBufPos);
 #ifdef PRINT_TEXT_CONN
-			cout << "@Received (buffered): " << out;
+			Log::t("Connection " + to_string(sockfd) + " received:\n" + out);
+#else
+			Log::t("Connection " + to_string(sockfd) + " received " + to_string(out.length()) + " bytes");
 #endif
 			return out;
 		}
 	} while (1);
 }
 
+//Deprecated
 string Connection::getRemoteAddress() {
 	sockaddr_in addr;
 	socklen_t addr_size = sizeof(sockaddr_in);
-	int res = getpeername(sockfd, (sockaddr *)&addr, &addr_size);
-	char *clientip = new char[20];
+	int res = getpeername(sockfd, (sockaddr*)&addr, &addr_size);
+	char* clientip = new char[20];
 	strcpy(clientip, inet_ntoa(addr.sin_addr));
 	stringstream ss;
 	ss << clientip << ":" << ntohs(addr.sin_port);
 	delete clientip;
 	return ss.str();
 }
+
+int Connection::error() {
+	return errorCode;
+}
+

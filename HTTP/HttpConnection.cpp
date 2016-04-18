@@ -24,18 +24,17 @@ void HttpConnection::enqueueRequest(NetworkRequest* nr) {
 }
 
 void HttpConnection::writerFunction() {
-	NetworkRequest* request = requestQueue.pop();
-	responseQueue.push(request);
-	while (request != NULL) {
+	NetworkRequest* request;
+	while ((request = requestQueue.pop())) {
+		responseQueue.push(request);
 		connection->sendStr(request->getHttpRequest().compile());
-		request = requestQueue.pop();
 	}
 	responseQueue.push(NULL);
 }
 
 void HttpConnection::readerFunction() {
-	NetworkRequest* request = responseQueue.pop();
-	while (request != NULL) {
+	NetworkRequest* request;
+	while ((request = responseQueue.pop())) {
 		HttpResponse hr(*connection);
 
 		if (hr.responseCode == "200" || //assume request succeeded and all data is here
@@ -45,8 +44,6 @@ void HttpConnection::readerFunction() {
 //		} else if (hr.responseCode == "206") { //request is incomplete
 //			//TODO: handle chunked content by auto-queuing next request
 		}
-
-		request = responseQueue.pop();
 	}
 }
 

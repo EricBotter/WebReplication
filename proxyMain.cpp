@@ -15,16 +15,18 @@ WebsiteDownloader downloader;
 
 void connectionThread(Connection* browser) {
 	ProxyThread pt(*browser, downloader);
-	Log::d("! Connection received. Waiting for HTTP request.");
-	pt.run();
-	Log::e("@ Threads run");
-	pt.join();
-	Log::e("X Threads ended");
+	Log::d("Connection received. Waiting for HTTP request.");
+	pt.runAndJoin();
+//	pt.run();
+//	pt.join();
+	Log::t("X Threads ended");
 	delete browser;
-	Log::e("# Browser deleted");
+	Log::t("# Browser deleted");
 }
 
 int main() {
+	Log::setLogLevel(LogLevel::TRACE);
+
 	Log::d("Starting server on port 8000");
 	ServerConnection sc(SERVER_PORT);
 	Log::d("Server started. Waiting for connection.");

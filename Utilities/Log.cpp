@@ -8,7 +8,7 @@ LogLevel Log::level;
 bool Log::logToFile;
 ofstream Log::file;
 
-void Log::log(string message, LogLevel level) {
+void Log::log(const string& message, LogLevel level) {
 	if (level < Log::level) return;
 
 	time_t rawtime;
