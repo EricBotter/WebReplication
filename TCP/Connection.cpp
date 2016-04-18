@@ -130,6 +130,11 @@ string Connection::receive(const string& delimiter) {
 			recvBufPos = out.length() - index;
 			memcpy(recvBuffer, out.c_str() + index, recvBufPos);
 			out.erase(index);
+#ifdef PRINT_TEXT_CONN
+			Log::t("Connection " + to_string(sockfd) + " received (buffered):\n" + out);
+#else
+			Log::t("Connection " + to_string(sockfd) + " received " + to_string(out.length()) + " bytes (buffered)");
+#endif
 			return out;
 		}
 	}
@@ -146,47 +151,6 @@ string Connection::receive(const string& delimiter) {
 			recvBufPos = out.length() - index;
 			memcpy(recvBuffer, out.c_str() + index, recvBufPos);
 			out.erase(index);
-			return out;
-		}
-	}
-}
-
-/* old receive
-string Connection::receive(const string& delimiter) {
-	string out;
-	ssize_t size;
-	char* end = strstr(recvBuffer, delimiter.c_str());
-	if (end != NULL) {
-		end += delimiter.length();
-		if (end - recvBuffer < recvBufPos) {
-			out = string(recvBuffer, end - recvBuffer);
-			recvBufPos = end - recvBuffer;
-			memmove(recvBuffer, end, recvBufPos);
-#ifdef PRINT_TEXT_CONN
-			Log::t("Connection " + to_string(sockfd) + " received (buffered):\n" + out);
-#else
-			Log::t("Connection " + to_string(sockfd) + " received " + to_string(out.length()) + " bytes (buffered)");
-#endif
-			return out;
-		} else {
-			recvBufPos = 0;
-		}
-	}
-	do {
-		size = recv(sockfd, recvBuffer + recvBufPos, RECV_BUFFER_SIZE - recvBufPos, 0);
-		if (size <= 0) {
-			recvBufPos = 0;
-			return "";
-		}
-		end = strstr(recvBuffer, delimiter.c_str());
-		if (end == NULL) {
-			out.append(recvBuffer, size + recvBufPos);
-			recvBufPos = 0;
-		} else {
-			end += delimiter.length();
-			out.append(recvBuffer, end - recvBuffer);
-			recvBufPos = recvBuffer + size - end;
-			memmove(recvBuffer, end, recvBufPos);
 #ifdef PRINT_TEXT_CONN
 			Log::t("Connection " + to_string(sockfd) + " received:\n" + out);
 #else
@@ -194,9 +158,8 @@ string Connection::receive(const string& delimiter) {
 #endif
 			return out;
 		}
-	} while (1);
+	}
 }
-*/
 
 string Connection::receive(size_t bytes) {
 	string out;
