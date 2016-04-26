@@ -1,12 +1,14 @@
-#ifndef THESIS_NETWORKREQUEST_H
-#define THESIS_NETWORKREQUEST_H
+#ifndef THESIS_OBJECTREQUEST_H
+#define THESIS_OBJECTREQUEST_H
 
-
+#include <mutex>
+#include <condition_variable>
 #include "../HTTP/HttpRequest.h"
 #include "../HTTP/HttpResponse.h"
-#include "../Utilities/Lockable.h"
 
-class NetworkRequest {
+using namespace std;
+
+class ObjectRequest {
 private:
 	HttpRequest originalRequest;
 	HttpResponse response;
@@ -15,7 +17,7 @@ private:
 	condition_variable completedCV;
 
 public:
-	NetworkRequest(HttpRequest);
+	ObjectRequest(HttpRequest);
 	// Will update this API when chunks are introduced
 	bool isCompleted();
 	void setCompleted();
@@ -24,9 +26,10 @@ public:
 	// This API is for the Proxy - will not change.
 	HttpRequest& getHttpRequest();
 	HttpResponse& getHttpResponse();
+	//Deprecated -- original request shouldn't change
 	void setHttpRequest(const HttpRequest&);
 	void setHttpResponse(const HttpResponse&);
 };
 
 
-#endif //THESIS_NETWORKREQUEST_H
+#endif //THESIS_OBJECTREQUEST_H

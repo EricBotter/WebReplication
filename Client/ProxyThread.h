@@ -5,7 +5,7 @@
 #include "../TCP/Connection.h"
 #include "../Utilities/ConcurrentQueue.h"
 #include "../Utilities/Lockable.h"
-#include "../Network/NetworkRequest.h"
+#include "../Network/ObjectRequest.h"
 #include "WebsiteDownloader.h"
 
 using namespace std;
@@ -22,7 +22,7 @@ private:
 	void readerFunction();
 	void writerFunction();
 
-	ConcurrentQueue<NetworkRequest*> queue;
+	ConcurrentQueue<ObjectRequest*> queue;
 	thread* httpReader;
 	thread* httpWriter;
 	Connection& connection;

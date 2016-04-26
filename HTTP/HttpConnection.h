@@ -5,7 +5,7 @@
 #include "../TCP/Connection.h"
 #include "../Utilities/ConcurrentQueue.h"
 #include "../Utilities/Lockable.h"
-#include "../Network/NetworkRequest.h"
+#include "../Network/ObjectRequest.h"
 
 using namespace std;
 
@@ -14,15 +14,15 @@ public:
 	HttpConnection(string, uint16_t);
 	~HttpConnection();
 	void run();
-	void enqueueRequest(NetworkRequest*);
+	void enqueueRequest(ObjectRequest*);
 	void join();
 
 private:
 	void readerFunction();
 	void writerFunction();
 
-	ConcurrentQueue<NetworkRequest*> requestQueue;
-	ConcurrentQueue<NetworkRequest*> responseQueue;
+	ConcurrentQueue<ObjectRequest*> requestQueue;
+	ConcurrentQueue<ObjectRequest*> responseQueue;
 	thread* httpReader;
 	thread* httpWriter;
 	Connection* connection;

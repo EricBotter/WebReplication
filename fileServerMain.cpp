@@ -33,13 +33,24 @@ void connectionThread(Connection* client) {
 			response.version = "HTTP/1.0";
 
 			string host = request.headers["Host"];
-			string content = fs.getFile(host, request.url);
-			if (content == "" && *request.url.rbegin() == '/') {
-				content = fs.getFile(host, request.url + "index");
-				if (content == "") {
-					content = fs.getFile(host, request.url + "index.html");
+
+			string content;
+
+			if (request.url.find(".sig") == request.url.length() - 4) {
+				content = fs.getSignature(host, request.url);
+				if (content == "" && request.url == "/.sig")
+					content = fs.getFile(host, "/index.sig"); //The one below works better
+			}
+			else {
+				content = fs.getFile(host, request.url);
+				if (content == "" && *request.url.rbegin() == '/') {
+					content = fs.getFile(host, request.url + "index");
+					if (content == "") {
+						content = fs.getFile(host, request.url + "index.html");
+					}
 				}
 			}
+
 			if (content == "") {
 				response.responseCode = "404";
 				response.responseText = "Not Found";
@@ -108,8 +119,6 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	Log::d("Loading websites...");
-	fs.init();
 	Log::d("Announcing sites to resolver");
 	//FIXME: hardcoded resolver address and port
 	Connection* c = new Connection("127.0.0.1", 3921, "127.0.0.1", serverport);

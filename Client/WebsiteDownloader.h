@@ -11,7 +11,7 @@
 #include "../HTTP/HttpResponse.h"
 #include "../Utilities/ConcurrentQueue.h"
 #include "../Utilities/Lockable.h"
-#include "../Network/NetworkRequest.h"
+#include "../Network/ObjectRequest.h"
 #include "../HTTP/HttpConnection.h"
 
 using namespace std;
@@ -21,7 +21,7 @@ public:
 	WebsiteDownloader();
 	~WebsiteDownloader();
 	void setActiveCaching(bool);
-	void enqueueRequest(NetworkRequest*);
+	void enqueueRequest(ObjectRequest*);
 
 private:
 	void threadFunction();
@@ -31,7 +31,7 @@ private:
 	vector<thread> threads;
 	mutex resolutionsMutex;
 
-	ConcurrentQueue<NetworkRequest*> requestQueue;
+	ConcurrentQueue<ObjectRequest*> requestQueue;
 
 #ifdef NEW_NETWORK
 	mutex connectionsMutex;

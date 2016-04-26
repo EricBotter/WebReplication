@@ -2,83 +2,64 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fstream>
-#include <cstring>
-#include <sys/errno.h>
 #include "FileServer.h"
 #include "../Utilities/Log.h"
 
-const char* filepath = "/var/webr/websites/";
+const char* webpath = "/var/webr/websites/";
 const char* sigpath = "/var/webr/signatures/";
 const map<string, string> mimetypes = {
 		{".html", "text/html"},
-		{".htm", "text/html"},
-		{"", "text/html"},
-		{".js", "application/javascript"},
-		{".css", "text/css"},
-		{".png", "image/png"},
-		{".jpg", "image/jpeg"},
+		{".htm",  "text/html"},
+		{"",      "text/html"},
+		{".js",   "application/javascript"},
+		{".css",  "text/css"},
+		{".png",  "image/png"},
+		{".jpg",  "image/jpeg"},
 		{".jpeg", "image/jpeg"},
-		{".ico", "image/x-icon"},
+		{".ico",  "image/x-icon"},
 };
 
 FileServer::FileServer() {
 }
 
-void FileServer::init() {
-	DIR* dir;
-	DIR* sitedir;
-	ifstream fin;
-	dirent* siteent;
-	dirent* objectent;
-	struct stat st;
-
-	//Note: Only checks files in the first level for each site
-	if ((dir = opendir(filepath)) != NULL) {
-		while ((siteent = readdir(dir)) != NULL) {
-			if (siteent->d_type != DT_DIR || strcmp(siteent->d_name, ".") == 0 || strcmp(siteent->d_name, "..") == 0)
-				continue;
-
-			string curdir = filepath;
-			curdir += siteent->d_name;
-
-			sitedir = opendir(curdir.c_str());
-			files.insert({siteent->d_name,{}});
-			while ((objectent = readdir(sitedir)) != NULL) {
-				if (objectent->d_type == DT_DIR)
-					continue;
-
-				string temp = curdir + "/";
-				temp.append(objectent->d_name);
-				fin.open(temp.c_str(), ios::binary);
-
-				long filesize;
-				if (stat(temp.c_str(), &st) == 0) {
-					filesize = st.st_size;
-					temp.resize((size_t)filesize);
-					fin.read(&temp[0], filesize);
-
-					files[siteent->d_name].insert({{(string)"/" + objectent->d_name, temp}});
-				} else {
-					Log::f(string("Errore nell'inserimento del file ")+objectent->d_name+": "+strerror(errno));
-				}
-				fin.close();
-			}
-		}
-		closedir(dir);
+string FileServer::getFile(string site, string file) {
+	string filepath = webpath + site + file;
+	struct stat s;
+	Log::f("Stat-ing "+filepath);
+	if (stat(filepath.c_str(), &s) == 0 && S_ISREG(s.st_mode)) {
+		ifstream filein(filepath, ios::binary);
+		return string((istreambuf_iterator<char>(filein)),
+					  istreambuf_iterator<char>());
 	}
+	return "";
 }
 
-string FileServer::getFile(string site, string file) {
-	if (files.find(site) != files.end()) {
-		return files[site][file];
+string FileServer::getSignature(string site, string file) {
+	string filepath = sigpath + site + file;
+	struct stat s;
+	if (stat(filepath.c_str(), &s) == 0 && S_ISREG(s.st_mode)) {
+		ifstream filein(filepath, ios::binary);
+		return string((istreambuf_iterator<char>(filein)),
+					  istreambuf_iterator<char>());
 	}
 	return "";
 }
 
 vector<string> FileServer::getSiteList() {
 	vector<string> out;
-	for (auto it = files.begin(); it != files.end(); it++) {
-		out.push_back(it->first);
+	DIR* dp;
+	struct dirent* ep;
+	struct stat s;
+
+	dp = opendir(webpath);
+	if (dp != NULL) {
+		while ((ep = readdir(dp))) {
+			string fullpath = string(webpath) + ep->d_name;
+			if (stat(fullpath.c_str(), &s) == 0 && s.st_mode & S_IFDIR) {
+				out.push_back(ep->d_name);
+			}
+		}
+		closedir(dp);
 	}
 	return out;
 }

@@ -27,7 +27,7 @@ void ProxyThread::readerFunction() {
 	while (reqStr != "") {
 		HttpRequest hr(reqStr);
 		hr.url = hr.url.substr(hr.url.substr(7).find('/') + 7);
-		auto temp = new NetworkRequest(hr);
+		auto temp = new ObjectRequest(hr);
 		queue.push(temp);
 		downloader.enqueueRequest(temp);
 		Log::t("Enqueued request for url <" + hr.url + "> of site <" + hr.headers["Host"] + '>');
@@ -37,7 +37,7 @@ void ProxyThread::readerFunction() {
 }
 
 void ProxyThread::writerFunction() {
-	NetworkRequest* request;
+	ObjectRequest* request;
 	while ((request = queue.pop())) {
 		Log::t("Waiting for request of url <" + request->getHttpRequest().url + "> of site <" + request->getHttpRequest().headers["Host"] + '>');
 		request->waitForCompleted();

@@ -7,13 +7,11 @@
 using namespace std;
 
 class FileServer {
-private:
-	map<string, map<string, string>> files;
 public:
 	FileServer();
 	string getFile(string, string);
+	string getSignature(string, string);
 	vector<string> getSiteList();
-	void init();
 	static string mimeFromFilename(string extension);
 };
 

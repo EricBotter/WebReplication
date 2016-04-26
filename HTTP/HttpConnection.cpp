@@ -20,12 +20,12 @@ void HttpConnection::run() {
 	httpReader = new thread(&HttpConnection::readerFunction, this);
 }
 
-void HttpConnection::enqueueRequest(NetworkRequest* nr) {
+void HttpConnection::enqueueRequest(ObjectRequest* nr) {
 	requestQueue.push(nr);
 }
 
 void HttpConnection::writerFunction() {
-	NetworkRequest* request;
+	ObjectRequest* request;
 	while ((request = requestQueue.pop())) {
 		Log::t("HttpConnection (writer) has request for <" + request->getHttpRequest().headers["Host"] +
 			   request->getHttpRequest().url + ">");
@@ -37,19 +37,15 @@ void HttpConnection::writerFunction() {
 }
 
 void HttpConnection::readerFunction() {
-	NetworkRequest* request;
+	ObjectRequest* request;
 	while ((request = responseQueue.pop())) {
 		Log::t("HttpConnection (reader) has request for <" + request->getHttpRequest().headers["Host"] +
 			   request->getHttpRequest().url + ">");
 		HttpResponse hr(*connection);
+		request->setHttpResponse(hr);
+		request->setCompleted();
 
-		if (hr.responseCode == "200" || //assume request succeeded and all data is here
-				hr.responseCode[0] == '4') {  //assume request failed
-			request->setHttpResponse(hr);
-			request->setCompleted();
-//		} else if (hr.responseCode == "206") { //request is incomplete
-//			//TODO: handle chunked content by auto-queuing next request
-		}
+		//TODO: add responseCode checking
 	}
 	Log::t("HttpConnection (reader) is ending.");
 }
