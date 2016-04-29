@@ -18,9 +18,10 @@ public:
 
 	HttpResponse();
 	HttpResponse(const HttpResponse&);
-	HttpResponse& operator=(const HttpResponse&);
+//	HttpResponse(const string& responseCode);
 	//TODO: replace this with a method
 	HttpResponse(Connection&);
+	HttpResponse& operator=(const HttpResponse&);
 	~HttpResponse();
 	string compile();
 };

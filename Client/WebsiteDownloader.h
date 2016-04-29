@@ -1,8 +1,6 @@
 #ifndef THESIS_WEBSITEDOWNLOADER_H
 #define THESIS_WEBSITEDOWNLOADER_H
 
-#define NEW_NETWORK
-
 #include <string>
 #include <thread>
 #include <vector>
@@ -20,24 +18,20 @@ class WebsiteDownloader {
 public:
 	WebsiteDownloader();
 	~WebsiteDownloader();
-	void setActiveCaching(bool);
 	void enqueueRequest(shared_ptr<VerifiedObjectRequest>);
 
 private:
 	void threadFunction();
 	vector<string> resolve(string);
-	HttpConnection* randomServerFromList(const vector<string>&);
+	shared_ptr<HttpConnection> randomServerFromList(const vector<string>&);
 
 	map<string, vector<string>> resolutions;
 	vector<thread> threads;
 	mutex resolutionsMutex;
 
 	ConcurrentQueue<shared_ptr<VerifiedObjectRequest>> requestQueue;
-
-#ifdef NEW_NETWORK
 	mutex connectionsMutex;
-	map<string, HttpConnection*> connections;
-#endif
+	map<string, shared_ptr<HttpConnection>> connections;
 
 	bool active = true;
 };

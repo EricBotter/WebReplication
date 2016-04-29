@@ -3,27 +3,12 @@
 
 #include <openssl/evp.h>
 #include <openssl/err.h>
-#include <openssl/rsa.h>
-#include <openssl/sha.h>
 #include <openssl/pem.h>
-#include <cstring>
 
 #include "FileVerifier.h"
 #include "Log.h"
 
 const string keypath = "/var/webr/keys/";
-
-//deprecated, since we use system we might as well use a bash script
-void FileVerifier::sign(string filepath, string signaturepath) {
-	mkdir(signaturepath.c_str(), 0755);
-	string website = filepath.substr(filepath.substr(0, filepath.find_last_of('/')).find_last_of('/') + 1);
-	string filename = filepath.substr(0, filepath.find_last_of('/') + 1);
-	string outfile = signaturepath + filename + ".sig";
-
-	string command = "openssl dgst -sha256 -sign " + keypath + website + "/private.pem -out "
-					 + outfile + ' ' + filepath;
-	system(command.c_str());
-}
 
 bool FileVerifier::verify(const string& website, const string& fileContent, const string& signature) {
 	if (!canVerify(website))

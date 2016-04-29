@@ -61,34 +61,27 @@ void WebsiteDownloader::threadFunction() {
 		string website = request->getWebsite();
 		vector<string> resolutions = resolve(website);
 		randomServerFromList(resolutions)->enqueueRequest(request->getObject());
-		randomServerFromList(resolutions)->enqueueRequest(request->getSignature());
+		if (request->canBeVerified())
+			randomServerFromList(resolutions)->enqueueRequest(request->getSignature());
 		Log::t("Sent requests for url <" + request->getWebsite() + request->getObjectUrl() + '>');
-		connectionsMutex.unlock();
 	}
-}
-
-void WebsiteDownloader::setActiveCaching(bool active) {
-	//TODO: prefetching of possible required objects
 }
 
 void WebsiteDownloader::enqueueRequest(shared_ptr<VerifiedObjectRequest> request) {
 	requestQueue.push(request);
 }
 
-HttpConnection* WebsiteDownloader::randomServerFromList(const vector<string>& resolutions) {
+shared_ptr<HttpConnection> WebsiteDownloader::randomServerFromList(const vector<string>& resolutions) {
 	string randomServer = resolutions[rand() % resolutions.size()];
 	connectionsMutex.lock();
 	if (connections.find(randomServer) == connections.end()) {
-		connections.insert({randomServer, new HttpConnection(
+		connections.insert({randomServer, make_shared<HttpConnection>(
 				PsrMessage::addressFromAddress(randomServer),
 				PsrMessage::portFromAddress(randomServer)
 		)});
 		connections[randomServer]->run();
 	}
+	shared_ptr<HttpConnection> out = connections[randomServer];
 	connectionsMutex.unlock();
-	return connections[randomServer];
+	return out;
 }
-
-
-
-

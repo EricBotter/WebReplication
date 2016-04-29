@@ -14,6 +14,8 @@ using namespace std;
 #define SERVER_PORT 3921
 
 int main() {
+	Log::setLogLevel(LogLevel::TRACE);
+
 	Log::d("Starting server on port 3921");
 	Resolver resolver;
 	ServerConnection sc(SERVER_PORT);

@@ -15,8 +15,12 @@ for i in `ls -d $webpath/*`; do
 	echo "Signing website $current..."
 
 	for file in `find $webpath/$current -type f`; do
+		directory=`dirname $sigpath${file:${#webpath}}.sig`
 		#echo $key hhh $sigpath${file:${#webpath}}.sig hhh $file
-		openssl dgst -sha256 -sign $key -out $sigpath${file:${#webpath}}.sig $file
+		if [ ! -d $directory ]; then
+			mkdir $directory
+		fi
+	openssl dgst -sha256 -sign $key -out $sigpath${file:${#webpath}}.sig $file
 	done
 done
 

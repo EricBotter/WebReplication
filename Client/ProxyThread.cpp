@@ -71,20 +71,24 @@ void ProxyThread::writerFunction() {
 				connection.sendStr(notVerified.compile());
 			}
 		} else {
-			//TODO: make this "static"
-			HttpResponse notVerifiable;
-			notVerifiable.version = "HTTP/1.0";
-			notVerifiable.responseCode = "500";
-			notVerifiable.responseText = "Internal Server Error";
-			notVerifiable.headers = {
-					{"Content-Type",   "text/html"},
-					{"Content-Length", to_string(notVerifiableEntity.length())},
-					{"Connection",     "keep-alive"}
-			};
-			notVerifiable.contentLength = notVerifiableEntity.length();
-			notVerifiable.content = new char[notVerifiableEntity.length()];
-			memcpy(notVerifiable.content, notVerifiableEntity.c_str(), notVerifiable.contentLength);
-			connection.sendStr(notVerifiable.compile());
+			if (request->getWebsite().find(".peer", request->getWebsite().length() - 5) != string::npos) {
+				//TODO: make this "static"
+				HttpResponse notVerifiable;
+				notVerifiable.version = "HTTP/1.0";
+				notVerifiable.responseCode = "500";
+				notVerifiable.responseText = "Internal Server Error";
+				notVerifiable.headers = {
+						{"Content-Type",   "text/html"},
+						{"Content-Length", to_string(notVerifiableEntity.length())},
+						{"Connection",     "keep-alive"}
+				};
+				notVerifiable.contentLength = notVerifiableEntity.length();
+				notVerifiable.content = new char[notVerifiableEntity.length()];
+				memcpy(notVerifiable.content, notVerifiableEntity.c_str(), notVerifiable.contentLength);
+				connection.sendStr(notVerifiable.compile());
+			} else {
+				connection.sendStr(request->getObject()->getHttpResponse().compile());
+			}
 		}
 		Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() + '>');
 	}

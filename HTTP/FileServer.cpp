@@ -25,7 +25,6 @@ FileServer::FileServer() {
 string FileServer::getFile(string site, string file) {
 	string filepath = webpath + site + file;
 	struct stat s;
-	Log::f("Stat-ing "+filepath);
 	if (stat(filepath.c_str(), &s) == 0 && S_ISREG(s.st_mode)) {
 		ifstream filein(filepath, ios::binary);
 		return string((istreambuf_iterator<char>(filein)),

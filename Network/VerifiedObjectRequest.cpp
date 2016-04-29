@@ -15,7 +15,7 @@ bool VerifiedObjectRequest::isVerified() {
 }
 
 bool VerifiedObjectRequest::canBeVerified() {
-	return FileVerifier::canVerify(object->getHttpRequest().headers["Host"]);
+	return getWebsite().find(".peer", getWebsite().length() - 5) != string::npos && FileVerifier::canVerify(getWebsite());
 }
 
 bool VerifiedObjectRequest::waitForVerification() {

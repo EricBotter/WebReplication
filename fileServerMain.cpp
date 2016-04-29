@@ -103,6 +103,8 @@ void connectionThread(Connection* client) {
 }
 
 int main(int argc, char* argv[]) {
+	Log::setLogLevel(LogLevel::TRACE);
+
 	srand(time(NULL));
 	uint16_t serverport = (uint16_t)(rand() % (SERVER_PORT_MAX - SERVER_PORT_MIN) + SERVER_PORT_MIN);
 

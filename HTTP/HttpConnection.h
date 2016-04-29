@@ -15,10 +15,12 @@ public:
 	void run();
 	void enqueueRequest(shared_ptr<ObjectRequest>);
 	void join();
+	bool active;
 
 private:
 	void readerFunction();
 	void writerFunction();
+	bool isActive();
 
 	ConcurrentQueue<shared_ptr<ObjectRequest>> requestQueue;
 	ConcurrentQueue<shared_ptr<ObjectRequest>> responseQueue;
