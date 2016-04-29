@@ -2,11 +2,11 @@
 #define THESIS_PROXYTHREAD_H
 
 #include <thread>
+#include "WebsiteDownloader.h"
 #include "../TCP/Connection.h"
 #include "../Utilities/ConcurrentQueue.h"
-#include "../Utilities/Lockable.h"
 #include "../Network/ObjectRequest.h"
-#include "WebsiteDownloader.h"
+#include "../Network/VerifiedObjectRequest.h"
 
 using namespace std;
 
@@ -22,7 +22,7 @@ private:
 	void readerFunction();
 	void writerFunction();
 
-	ConcurrentQueue<ObjectRequest*> queue;
+	ConcurrentQueue<shared_ptr<VerifiedObjectRequest>> queue;
 	thread* httpReader;
 	thread* httpWriter;
 	Connection& connection;

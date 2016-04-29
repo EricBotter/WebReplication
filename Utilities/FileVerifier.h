@@ -9,7 +9,7 @@ class FileVerifier {
 public:
 	static void sign(string filepath, string signaturepath);
 	static bool verify(const string&, const string&, const string&);
-	static bool canVerify(string);
+	static bool canVerify(const string&);
 };
 
 

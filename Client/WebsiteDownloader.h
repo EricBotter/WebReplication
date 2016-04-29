@@ -10,9 +10,9 @@
 #include <condition_variable>
 #include "../HTTP/HttpResponse.h"
 #include "../Utilities/ConcurrentQueue.h"
-#include "../Utilities/Lockable.h"
 #include "../Network/ObjectRequest.h"
 #include "../HTTP/HttpConnection.h"
+#include "../Network/VerifiedObjectRequest.h"
 
 using namespace std;
 
@@ -21,17 +21,18 @@ public:
 	WebsiteDownloader();
 	~WebsiteDownloader();
 	void setActiveCaching(bool);
-	void enqueueRequest(ObjectRequest*);
+	void enqueueRequest(shared_ptr<VerifiedObjectRequest>);
 
 private:
 	void threadFunction();
 	vector<string> resolve(string);
+	HttpConnection* randomServerFromList(const vector<string>&);
 
 	map<string, vector<string>> resolutions;
 	vector<thread> threads;
 	mutex resolutionsMutex;
 
-	ConcurrentQueue<ObjectRequest*> requestQueue;
+	ConcurrentQueue<shared_ptr<VerifiedObjectRequest>> requestQueue;
 
 #ifdef NEW_NETWORK
 	mutex connectionsMutex;

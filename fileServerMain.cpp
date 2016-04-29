@@ -36,10 +36,15 @@ void connectionThread(Connection* client) {
 
 			string content;
 
-			if (request.url.find(".sig") == request.url.length() - 4) {
-				content = fs.getSignature(host, request.url);
-				if (content == "" && request.url == "/.sig")
-					content = fs.getFile(host, "/index.sig"); //The one below works better
+			if (request.url.find("?sig", request.url.length() - 4) != string::npos) {
+				string originalUrl = request.url.substr(0, request.url.length() - 4);
+				content = fs.getSignature(host, originalUrl + ".sig");
+				if (content == "" && request.url == "/?sig") {
+					content = fs.getSignature(host, originalUrl + "index.sig");
+					if (content == "") {
+						content = fs.getSignature(host, originalUrl + "index.html.sig");
+					}
+				}
 			}
 			else {
 				content = fs.getFile(host, request.url);

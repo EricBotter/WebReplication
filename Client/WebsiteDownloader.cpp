@@ -53,34 +53,16 @@ vector<string> WebsiteDownloader::resolve(string hostname) {
 
 void WebsiteDownloader::threadFunction() {
 	while (active) {
-		ObjectRequest* request = requestQueue.pop();
+		shared_ptr<VerifiedObjectRequest> request = requestQueue.pop();
 		if (request == NULL) {
 			active = false;
 			break;
 		}
-		string host = request->getHttpRequest().headers["Host"];
-
-		HttpRequest requestToSend;
-		requestToSend.method = "GET";
-		requestToSend.version = "HTTP/1.0";
-		requestToSend.url = request->getHttpRequest().url;
-		requestToSend.headers = {{"Connection", "keep-alive"},
-								 {"Host",       host}};
-
-		request->setHttpRequest(requestToSend);
-		vector<string> resolutions = resolve(host);
-		string randomServer = resolutions[rand() % resolutions.size()];
-
-		connectionsMutex.lock();
-		if (connections.find(randomServer) == connections.end()) {
-			connections.insert({randomServer, new HttpConnection(
-					PsrMessage::addressFromAddress(randomServer),
-					PsrMessage::portFromAddress(randomServer)
-			)});
-			connections[randomServer]->run();
-		}
-		connections[randomServer]->enqueueRequest(request);
-		Log::t("Passed request for url <" + request->getHttpRequest().headers["Host"] + request->getHttpRequest().url + "> to host " + randomServer);
+		string website = request->getWebsite();
+		vector<string> resolutions = resolve(website);
+		randomServerFromList(resolutions)->enqueueRequest(request->getObject());
+		randomServerFromList(resolutions)->enqueueRequest(request->getSignature());
+		Log::t("Sent requests for url <" + request->getWebsite() + request->getObjectUrl() + '>');
 		connectionsMutex.unlock();
 	}
 }
@@ -89,8 +71,24 @@ void WebsiteDownloader::setActiveCaching(bool active) {
 	//TODO: prefetching of possible required objects
 }
 
-void WebsiteDownloader::enqueueRequest(ObjectRequest* request) {
+void WebsiteDownloader::enqueueRequest(shared_ptr<VerifiedObjectRequest> request) {
 	requestQueue.push(request);
 }
+
+HttpConnection* WebsiteDownloader::randomServerFromList(const vector<string>& resolutions) {
+	string randomServer = resolutions[rand() % resolutions.size()];
+	connectionsMutex.lock();
+	if (connections.find(randomServer) == connections.end()) {
+		connections.insert({randomServer, new HttpConnection(
+				PsrMessage::addressFromAddress(randomServer),
+				PsrMessage::portFromAddress(randomServer)
+		)});
+		connections[randomServer]->run();
+	}
+	connectionsMutex.unlock();
+	return connections[randomServer];
+}
+
+
 
 

@@ -6,14 +6,19 @@
 
 class VerifiedObjectRequest {
 private:
-	ObjectRequest object;
-	ObjectRequest signature;
+	shared_ptr<ObjectRequest> object;
+	shared_ptr<ObjectRequest> signature;
 	bool verificationDone;
 	bool verified;
 public:
+	VerifiedObjectRequest(shared_ptr<ObjectRequest>);
+	shared_ptr<ObjectRequest> getObject();
+	shared_ptr<ObjectRequest> getSignature();
+	string getWebsite();
+	string getObjectUrl();
 	bool canBeVerified();
 	bool isVerified();
-
+	bool waitForVerification();
 };
 
 

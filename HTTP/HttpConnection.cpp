@@ -20,12 +20,12 @@ void HttpConnection::run() {
 	httpReader = new thread(&HttpConnection::readerFunction, this);
 }
 
-void HttpConnection::enqueueRequest(ObjectRequest* nr) {
+void HttpConnection::enqueueRequest(shared_ptr<ObjectRequest> nr) {
 	requestQueue.push(nr);
 }
 
 void HttpConnection::writerFunction() {
-	ObjectRequest* request;
+	shared_ptr<ObjectRequest> request;
 	while ((request = requestQueue.pop())) {
 		Log::t("HttpConnection (writer) has request for <" + request->getHttpRequest().headers["Host"] +
 			   request->getHttpRequest().url + ">");
@@ -37,7 +37,7 @@ void HttpConnection::writerFunction() {
 }
 
 void HttpConnection::readerFunction() {
-	ObjectRequest* request;
+	shared_ptr<ObjectRequest> request;
 	while ((request = responseQueue.pop())) {
 		Log::t("HttpConnection (reader) has request for <" + request->getHttpRequest().headers["Host"] +
 			   request->getHttpRequest().url + ">");

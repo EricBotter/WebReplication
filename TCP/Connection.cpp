@@ -145,7 +145,7 @@ string Connection::receive(const string& delimiter) {
 			return "";
 		}
 		out.append(recvBuffer, (size_t)size);
-		index = out.find(delimiter, out.length() == size ? 0 : out.length() - size - delimiter.length());
+		index = out.find(delimiter, out.length() < size + delimiter.length() ? 0 : out.length() - size - delimiter.length());
 		if (index != out.npos) {
 			index += delimiter.length();
 			recvBufPos = out.length() - index;
