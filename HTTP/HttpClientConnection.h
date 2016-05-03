@@ -1,5 +1,5 @@
-#ifndef THESIS_HTTPCONNECTION_H
-#define THESIS_HTTPCONNECTION_H
+#ifndef THESIS_HTTPCLIENTCONNECTION_H
+#define THESIS_HTTPCLIENTCONNECTION_H
 
 #include <thread>
 #include "../TCP/Connection.h"
@@ -8,26 +8,27 @@
 
 using namespace std;
 
-class HttpConnection {
+class HttpClientConnection {
 public:
-	HttpConnection(string, uint16_t);
-	~HttpConnection();
+	HttpClientConnection(string, uint16_t);
+	~HttpClientConnection();
 	void run();
 	void enqueueRequest(shared_ptr<ObjectRequest>);
 	void join();
-	bool active;
+	bool isActive();
 
 private:
 	void readerFunction();
 	void writerFunction();
-	bool isActive();
+	void makeInactive();
 
 	ConcurrentQueue<shared_ptr<ObjectRequest>> requestQueue;
 	ConcurrentQueue<shared_ptr<ObjectRequest>> responseQueue;
 	thread* httpReader;
 	thread* httpWriter;
 	Connection* connection;
+	bool active;
 };
 
 
-#endif //THESIS_HTTPCONNECTION_H
+#endif //THESIS_HTTPCLIENTCONNECTION_H

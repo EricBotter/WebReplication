@@ -11,6 +11,7 @@
 #include "Connection.h"
 #include "../Utilities/Log.h"
 
+
 Connection::Connection(int sockfd) : sockfd(sockfd), recvBufPos(0) {
 	Log::t("Creating Connection from existing socket " + to_string(sockfd));
 }
@@ -113,7 +114,8 @@ int Connection::sendStr(const string& message) const {
 #ifdef PRINT_TEXT_CONN
 	Log::t("Connection " + to_string(sockfd) + " sent:\n" + message);
 #else
-	Log::t("Connection " + to_string(sockfd) + " sent " + to_string(bytes) + '/' + to_string(message.length()) + " bytes");
+	Log::t("Connection " + to_string(sockfd) + " sent " + to_string(bytes) + '/' + to_string(message.length()) +
+		   " bytes");
 #endif
 	return bytes;
 }
@@ -139,13 +141,19 @@ string Connection::receive(const string& delimiter) {
 		}
 	}
 	recvBufPos = 0;
-	for (;;) {
+	for (; ;) {
+		//TODO: add server configuration
 		size = recv(sockfd, recvBuffer, RECV_BUFFER_SIZE, 0);
-		if (size <= 0) {
-			return "";
+		if (size < 0) {
+			errorCode = errno;
+			return out;
+		}
+		if (size == 0) {
+			return out;
 		}
 		out.append(recvBuffer, (size_t)size);
-		index = out.find(delimiter, out.length() < size + delimiter.length() ? 0 : out.length() - size - delimiter.length());
+		index = out.find(delimiter,
+						 out.length() < size + delimiter.length() ? 0 : out.length() - size - delimiter.length());
 		if (index != out.npos) {
 			index += delimiter.length();
 			recvBufPos = out.length() - index;
@@ -177,9 +185,14 @@ string Connection::receive(size_t bytes) {
 	}
 	do {
 		size = recv(sockfd, recvBuffer + recvBufPos, RECV_BUFFER_SIZE - recvBufPos, 0);
-		if (size <= 0) {
+		if (size < 0) {
+			errorCode = errno;
 			recvBufPos = 0;
-			return "";
+			return out;
+		}
+		if (size == 0) {
+			recvBufPos = 0;
+			return out;
 		}
 		size += recvBufPos;
 		recvBufPos = 0;
@@ -214,6 +227,12 @@ string Connection::getRemoteAddress() {
 }
 
 int Connection::error() {
-	return errorCode;
+	int out = errorCode;
+	errorCode = 0;
+	return out;
 }
 
+void Connection::setTimeout(long milliseconds) {
+	struct timeval timeout = {milliseconds/1000, (milliseconds%1000)*1000};
+	setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+}

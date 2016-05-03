@@ -6,7 +6,7 @@
 #include <openssl/pem.h>
 
 #include "FileVerifier.h"
-#include "Log.h"
+#include "../Utilities/Log.h"
 
 const string keypath = "/var/webr/keys/";
 

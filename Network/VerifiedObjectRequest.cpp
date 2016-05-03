@@ -1,5 +1,12 @@
 #include "VerifiedObjectRequest.h"
-#include "../Utilities/FileVerifier.h"
+#include "FileVerifier.h"
+
+VerifiedObjectRequest::VerifiedObjectRequest(const HttpRequest& request)
+		: verified(false), verificationDone(false) {
+	object = make_shared<ObjectRequest>(request);
+	signature = make_shared<ObjectRequest>(request);
+	signature->getHttpRequest().url.append("?sig");
+}
 
 VerifiedObjectRequest::VerifiedObjectRequest(shared_ptr<ObjectRequest> objectRequest)
 		: object(objectRequest), verified(false), verificationDone(false) {
@@ -46,4 +53,8 @@ string VerifiedObjectRequest::getWebsite() {
 
 string VerifiedObjectRequest::getObjectUrl() {
 	return object->getHttpRequest().url;
+}
+
+bool VerifiedObjectRequest::hasFailed() {
+	return object->hasFailed() || signature->hasFailed();
 }

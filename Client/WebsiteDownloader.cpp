@@ -14,7 +14,8 @@ WebsiteDownloader::WebsiteDownloader() {
 WebsiteDownloader::~WebsiteDownloader() {
 	active = false;
 	for (int i = 0; i < N_THREADS; ++i) {
-		threads[i].join();
+		if (threads[i].joinable())
+			threads[i].join();
 	}
 }
 
@@ -71,17 +72,24 @@ void WebsiteDownloader::enqueueRequest(shared_ptr<VerifiedObjectRequest> request
 	requestQueue.push(request);
 }
 
-shared_ptr<HttpConnection> WebsiteDownloader::randomServerFromList(const vector<string>& resolutions) {
-	string randomServer = resolutions[rand() % resolutions.size()];
-	connectionsMutex.lock();
-	if (connections.find(randomServer) == connections.end()) {
-		connections.insert({randomServer, make_shared<HttpConnection>(
-				PsrMessage::addressFromAddress(randomServer),
-				PsrMessage::portFromAddress(randomServer)
-		)});
-		connections[randomServer]->run();
+//TODO: make this a load balancer
+shared_ptr<HttpClientConnection> WebsiteDownloader::randomServerFromList(const vector<string>& resolutions) {
+	shared_ptr<HttpClientConnection> out = nullptr;
+	while (out == nullptr) {
+		string randomServer = resolutions[rand() % resolutions.size()];
+		connectionsMutex.lock();
+		if (connections.find(randomServer) == connections.end()) {
+			connections.insert({randomServer, make_shared<HttpClientConnection>(
+					PsrMessage::addressFromAddress(randomServer),
+					PsrMessage::portFromAddress(randomServer)
+			)});
+			connections[randomServer]->run();
+		} else if (!connections[randomServer]->isActive()) {
+			connections.erase(randomServer);
+			continue;
+		}
+		out = connections[randomServer];
 	}
-	shared_ptr<HttpConnection> out = connections[randomServer];
 	connectionsMutex.unlock();
 	return out;
 }

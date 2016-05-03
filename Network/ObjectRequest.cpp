@@ -1,9 +1,7 @@
 #include "ObjectRequest.h"
 
-ObjectRequest::ObjectRequest(HttpRequest hr) : originalRequest(hr) {
-	response = HttpResponse();
-	completed = false;
-}
+ObjectRequest::ObjectRequest(HttpRequest hr)
+		: originalRequest(hr), completed(false), failed(false), response() { }
 
 bool ObjectRequest::isCompleted() {
 	return completed;
@@ -36,4 +34,13 @@ void ObjectRequest::waitForCompleted() {
 	unique_lock<mutex> guard(completedMutex);
 	while (!completed)
 		completedCV.wait(guard);
+}
+
+bool ObjectRequest::hasFailed() {
+	return failed;
+}
+
+void ObjectRequest::setFailed() {
+	failed = true;
+	setCompleted();
 }

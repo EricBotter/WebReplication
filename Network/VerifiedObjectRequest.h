@@ -11,6 +11,7 @@ private:
 	bool verificationDone;
 	bool verified;
 public:
+	VerifiedObjectRequest(const HttpRequest&);
 	VerifiedObjectRequest(shared_ptr<ObjectRequest>);
 	shared_ptr<ObjectRequest> getObject();
 	shared_ptr<ObjectRequest> getSignature();
@@ -18,6 +19,7 @@ public:
 	string getObjectUrl();
 	bool canBeVerified();
 	bool isVerified();
+	bool hasFailed();
 	bool waitForVerification();
 };
 

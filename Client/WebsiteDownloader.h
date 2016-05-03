@@ -9,7 +9,7 @@
 #include "../HTTP/HttpResponse.h"
 #include "../Utilities/ConcurrentQueue.h"
 #include "../Network/ObjectRequest.h"
-#include "../HTTP/HttpConnection.h"
+#include "../HTTP/HttpClientConnection.h"
 #include "../Network/VerifiedObjectRequest.h"
 
 using namespace std;
@@ -23,7 +23,7 @@ public:
 private:
 	void threadFunction();
 	vector<string> resolve(string);
-	shared_ptr<HttpConnection> randomServerFromList(const vector<string>&);
+	shared_ptr<HttpClientConnection> randomServerFromList(const vector<string>&);
 
 	map<string, vector<string>> resolutions;
 	vector<thread> threads;
@@ -31,7 +31,7 @@ private:
 
 	ConcurrentQueue<shared_ptr<VerifiedObjectRequest>> requestQueue;
 	mutex connectionsMutex;
-	map<string, shared_ptr<HttpConnection>> connections;
+	map<string, shared_ptr<HttpClientConnection>> connections;
 
 	bool active = true;
 };

@@ -13,7 +13,6 @@ private:
 	size_t recvBufPos;
 	char recvBuffer[RECV_BUFFER_SIZE];
 	int errorCode;
-	string newReceive(const string&);
 
 public:
 	//To be used by servers
@@ -29,8 +28,10 @@ public:
 	string receive(size_t);
 	//get host's IP -- deprecated
 	string getRemoteAddress();
+	//sets Timeout after which connection fails
+	void setTimeout(long);
 
-	// Is non-zero if connection fails (equivalent of errno)
+		// Is non-zero if connection fails (equivalent of errno)
 	int error();
 };
 

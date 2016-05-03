@@ -12,7 +12,7 @@ class ObjectRequest {
 private:
 	HttpRequest originalRequest;
 	HttpResponse response;
-	bool completed;
+	bool completed, failed;
 	mutex completedMutex;
 	condition_variable completedCV;
 
@@ -21,6 +21,8 @@ public:
 	// Will update this API when chunks are introduced
 	bool isCompleted();
 	void setCompleted();
+	bool hasFailed();
+	void setFailed();
 	void waitForCompleted();
 
 	// This API is for the Proxy - will not change.

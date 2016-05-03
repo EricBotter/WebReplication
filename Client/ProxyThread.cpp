@@ -36,8 +36,7 @@ void ProxyThread::readerFunction() {
 	while (reqStr != "") {
 		HttpRequest hr(reqStr);
 		hr.url = hr.url.substr(hr.url.substr(7).find('/') + 7);
-		shared_ptr<ObjectRequest> oReq = make_shared<ObjectRequest>(hr);
-		shared_ptr<VerifiedObjectRequest> temp = make_shared<VerifiedObjectRequest>(oReq);
+		shared_ptr<VerifiedObjectRequest> temp = make_shared<VerifiedObjectRequest>(hr);
 		queue.push(temp);
 		downloader.enqueueRequest(temp);
 		Log::t("Enqueued request for url <" + hr.url + "> of site <" + hr.headers["Host"] + '>');
@@ -51,9 +50,17 @@ void ProxyThread::writerFunction() {
 	while ((request = queue.pop())) {
 		Log::t("Waiting for request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() + '>');
 		request->waitForVerification();
-		if (request->canBeVerified()) {
+		if (request->hasFailed()) {
+			// retrying request if it fails
+			Log::t("Failed request for url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() + ">, retrying");
+			shared_ptr<VerifiedObjectRequest> temp = make_shared<VerifiedObjectRequest>(request->getObject()->getHttpRequest());
+			queue.push(temp);
+			downloader.enqueueRequest(temp);
+		}
+		else if (request->canBeVerified()) {
 			if (request->isVerified()) {
 				connection.sendStr(request->getObject()->getHttpResponse().compile());
+				Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() + '>');
 			} else {
 				//TODO: make this "static"
 				HttpResponse notVerified;
@@ -69,6 +76,7 @@ void ProxyThread::writerFunction() {
 				notVerified.content = new char[notVerifiedEntity.length()];
 				memcpy(notVerified.content, notVerifiedEntity.c_str(), notVerified.contentLength);
 				connection.sendStr(notVerified.compile());
+				Log::t("500'd request of non-verified url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() + '>');
 			}
 		} else {
 			if (request->getWebsite().find(".peer", request->getWebsite().length() - 5) != string::npos) {
@@ -86,16 +94,17 @@ void ProxyThread::writerFunction() {
 				notVerifiable.content = new char[notVerifiableEntity.length()];
 				memcpy(notVerifiable.content, notVerifiableEntity.c_str(), notVerifiable.contentLength);
 				connection.sendStr(notVerifiable.compile());
+				Log::t("500'd request of url <" + request->getObjectUrl() + "> of non-verifiable site <" + request->getWebsite() + '>');
 			} else {
 				connection.sendStr(request->getObject()->getHttpResponse().compile());
+				Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() + '>');
 			}
 		}
-		Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() + '>');
 	}
 }
 
 void ProxyThread::join() {
-	if (httpReader->joinable()) {
+	if (httpReader != NULL && httpReader->joinable()) {
 		httpReader->join();
 	}
 	if (httpWriter->joinable()) {
