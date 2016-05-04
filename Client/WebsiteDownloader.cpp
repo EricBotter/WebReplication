@@ -4,6 +4,8 @@
 
 #define N_THREADS 4
 
+string resolverAddress = "127.0.0.1:3921";
+
 WebsiteDownloader::WebsiteDownloader() {
 	threads.reserve(N_THREADS);
 	for (int i = 0; i < N_THREADS; ++i) {
@@ -35,11 +37,11 @@ vector<string> WebsiteDownloader::resolve(string hostname) {
 		hosts = it->second;
 	} else {
 		PsrMessage psrRequest;
-		psrRequest.key = "Host";
-		psrRequest.value = hostname;
-
-		//FIXME: hardcoded resolution IP and PORT
-		Connection psrConn("127.0.0.1", 3921);
+		psrRequest.setResolve(hostname);
+		Connection psrConn(
+				PsrMessage::addressFromAddress(resolverAddress),
+				PsrMessage::portFromAddress(resolverAddress)
+		);
 		psrConn.sendStr(psrRequest.compile());
 		PsrMessage psrResponse(psrConn);
 		hosts = psrResponse.getHosts();

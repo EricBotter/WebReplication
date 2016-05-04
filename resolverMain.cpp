@@ -23,34 +23,32 @@ int main() {
 
 	Connection* client;
 	while ((client = sc.takeConn()) != NULL) {
-		Log::d("! Connection received. Waiting for PSR request.");
+		Log::d("Connection received. Waiting for PSR request.");
 		PsrMessage request(*client);
 
-		Log::d(string("_ Request received for URL ")+request.value);
+		Log::d(string("Request received: " + request.message));
 
 		PsrMessage response;
-		if (request.key == "Host") {
-			vector<string> addresses = resolver.resolve(request.value);
+		if (request.message == "RESOLVE" && request.values.begin()->first == "Host") {
+			vector<string> addresses = resolver.resolve(request.values.begin()->second);
 			response.setAddresses(addresses);
-		} else if (request.key == "Available") {
-			vector<string> hosts = request.getHosts();
+		} else if (request.message == "ANNOUNCE") {
+			string server;
+			vector<string> hosts = request.getAnnounced(server);
 			for(string host : hosts)
-				resolver.add(host, client->getRemoteAddress());
-			response.setMessage("OK");
+				resolver.add(host, server);
+			response.setOk();
 		} else {
-			response.setMessage("INVALID");
+			response.setInvalid();
 		}
 
 		client->sendStr(response.compile());
-		Log::d("< Request completed");
+		Log::d("Request completed, waiting for new connection.");
 
 		delete client;
-		Log::d(". Waiting for new connection...");
 	}
 
-	stringstream ss;
-	ss << "Error in receiving connections. Error (code " << errno << "):";
-	Log::f(ss.str());
+	Log::f("Error in receiving connections. Error (code " + to_string(errno) + "):");
 	Log::f(strerror(errno));
 
 	return 0;

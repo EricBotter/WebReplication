@@ -140,11 +140,12 @@ int main(int argc, char* argv[]) {
 			serverport
 	);
 	PsrMessage pm;
-	pm.setSites(fs.getSiteList());
+	pm.setSites(fs.getSiteList(), serverAddress);
 	c->sendStr(pm.compile());
 	pm = PsrMessage(*c);
-	if (pm.value != "OK") {
-		Log::e("ERROR - Resolver didn't receive site list");
+	if (pm.message != "OK") {
+		Log::f("FATAL ERROR - Resolver didn't receive site list");
+		return EXIT_FAILURE;
 	}
 
 	delete c;

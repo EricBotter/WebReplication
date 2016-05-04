@@ -9,15 +9,21 @@ PSR Address Resolution
 
 Request:
 ```
-PSR/0.1\r\n
+PSR/0.2 RESOLVE\r\n
 Host: example.peer\r\n
 \r\n
 ```
 
 Response:
 ```
-PSR/0.1\r\n
-Address: 198.51.100.84:31826 198.51.100.173:43298\r\n
+PSR/0.2 OK\r\n
+Address: 198.51.100.84:4011 198.51.100.173:4011\r\n
+\r\n
+```
+
+Response in case of no server found:
+```
+PSR/0.2 NONE\r\n
 \r\n
 ```
 
@@ -26,14 +32,23 @@ PSR Host Notification
 
 Notification:
 ```
-PSR/0.1\r\n
+PSR/0.2 ANNOUNCE\r\n
 Available: example1.peer example2.peer example3.peer example4.peer\r\n
+Server: 198.51.100.84:4011\r\n
 \r\n
 ```
 
 Response:
 ```
-PSR/0.1\r\n
-Message: OK\r\n
+PSR/0.2 OK\r\n
+\r\n
+```
+
+PSR Response if incorrect request
+---------------------------------
+
+Response:
+```
+PSR/0.2 INVALID\r\n
 \r\n
 ```

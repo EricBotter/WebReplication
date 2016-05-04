@@ -2,33 +2,54 @@
 #include "PsrMessage.h"
 
 PsrMessage::PsrMessage() {
-	version = "PSR/0.1";
+	version = "PSR/0.2";
 }
 
-PsrMessage::PsrMessage(string content) {
-	size_t index = content.find("\r\n") + 2;
-	version = content.substr(0, index);
-	size_t prevIndex = index;
-	index = content.find("\r\n");
-	content = content.substr(prevIndex, index - prevIndex);
+PsrMessage::PsrMessage(const string& content) {
+	string line;
 
-	index = content.find(": ");
-	key = content.substr(0, index);
-	value = content.substr(index + 2);
+	size_t prevIndex = content.find("\r\n") + 2;
+	line = content.substr(0, prevIndex);
+	size_t index = line.find(' ');
+	version = line.substr(0, index);
+	message = line.substr(index + 1, line.length() - index - 3);
+
+	index = content.find("\r\n", prevIndex);
+	while (index != string::npos) {
+		line = content.substr(prevIndex, index);
+
+		prevIndex = line.find(": ");
+		if (prevIndex == string::npos)
+			break;
+		values.insert({{line.substr(0, prevIndex), line.substr(prevIndex + 2)}});
+
+		prevIndex = index;
+		index = content.find("\r\n", prevIndex);
+	}
 }
 
 PsrMessage::PsrMessage(Connection& connection) {
 	string content = connection.receive("\r\n\r\n");
+	string line;
 
-	size_t index = content.find("\r\n") + 2;
-	version = content.substr(0, index);
-	size_t prevIndex = index;
-	index = content.find("\r\n");
-	content = content.substr(prevIndex, index - prevIndex);
+	size_t prevIndex = content.find("\r\n") + 2;
+	line = content.substr(0, prevIndex);
+	size_t index = line.find(' ');
+	version = line.substr(0, index);
+	message = line.substr(index + 1, line.length() - index - 3);
 
-	index = content.find(": ");
-	key = content.substr(0, index);
-	value = content.substr(index + 2, content.find("\r\n", index + 2) - index - 2);
+	index = content.find("\r\n", prevIndex);
+	while (index != string::npos) {
+		line = content.substr(prevIndex, index - prevIndex);
+
+		prevIndex = line.find(": ");
+		if (prevIndex == string::npos)
+			break;
+		values.insert({{line.substr(0, prevIndex), line.substr(prevIndex + 2)}});
+
+		prevIndex = index + 2;
+		index = content.find("\r\n", prevIndex);
+	}
 }
 
 uint16_t PsrMessage::portFromAddress(const string& address) {
@@ -52,39 +73,87 @@ string PsrMessage::addressFromAddress(const string& address) {
 }
 
 string PsrMessage::compile() {
-	return version + "\r\n" + key + ": " + value + "\r\n\r\n";
+	string out = version + ' ' + message + "\r\n";
+	for (auto it = values.begin(); it != values.end(); ++it) {
+		out.append(it->first + ": " + it->second + "\r\n");
+	}
+	out.append("\r\n");
+	return out;
 }
 
 void PsrMessage::setAddresses(const vector<string>& addresses) {
-	key = "Address";
-	stringstream ss;
-	for (string s : addresses) {
-		ss << " " << s;
+	version = "PSR/0.2";
+	values.erase(values.begin(), values.end());
+	if (addresses.size() == 0) {
+		message = "NONE";
+		return;
 	}
-	value = ss.str().substr(1);
+	message = "OK";
+	stringstream ss;
+	for (auto it = addresses.begin(); it != addresses.end(); ++it)
+		ss << ' ' << *it;
+	values.insert({{"Address", ss.str().substr(1)}});
 }
 
 vector<string> PsrMessage::getHosts() {
 	vector<string> hosts;
+	if (message != "OK" || values.size() != 1 || values.begin()->first != "Address")
+		return hosts;
+
+	string value = values.begin()->second;
 	size_t prevIndex = 0, index;
-	do {
-		index = value.find(" ", prevIndex);
+	while ((index = value.find(" ", prevIndex)) != string::npos) {
 		hosts.push_back(value.substr(prevIndex, index - prevIndex));
 		prevIndex = index + 1;
-	} while (index != string::npos);
+	}
+	hosts.push_back(value.substr(prevIndex));
 	return hosts;
 }
 
-void PsrMessage::setMessage(string message) {
-	key = "Message";
-	value = message;
+void PsrMessage::setOk() {
+	version = "PSR/0.2";
+	message = "OK";
+	values.erase(values.begin(), values.end());
 }
 
-void PsrMessage::setSites(const vector<string>& sites) {
-	key = "Available";
+void PsrMessage::setInvalid() {
+	version = "PSR/0.2";
+	message = "INVALID";
+	values.erase(values.begin(), values.end());
+}
+
+void PsrMessage::setSites(const vector<string>& sites, const string& host) {
+	version = "PSR/0.2";
+	message = "ANNOUNCE";
+	values.erase(values.begin(), values.end());
 	stringstream ss;
 	for (string s : sites) {
 		ss << " " << s;
 	}
-	value = ss.str().substr(1);
+	values.insert({{"Available", ss.str().substr(1)},
+				   {"Server",    host}});
+}
+
+void PsrMessage::setResolve(const string& host) {
+	version = "PSR/0.2";
+	message = "RESOLVE";
+	values.erase(values.begin(), values.end());
+	values.insert({{"Host", host}});
+}
+
+vector<string> PsrMessage::getAnnounced(string& server) {
+	vector<string> sites;
+	if (message != "ANNOUNCE" || values.size() != 2 || values.find("Available") == values.end() ||
+		values.find("Server") == values.end())
+		return sites;
+
+	server = values["Server"];
+	string value = values["Available"];
+	size_t prevIndex = 0, index;
+	while ((index = value.find(" ", prevIndex)) != string::npos) {
+		sites.push_back(value.substr(prevIndex, index - prevIndex));
+		prevIndex = index + 1;
+	}
+	sites.push_back(value.substr(prevIndex));
+	return sites;
 }

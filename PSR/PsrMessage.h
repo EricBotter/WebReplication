@@ -3,24 +3,32 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include "../TCP/Connection.h"
 
 using namespace std;
 
 class PsrMessage {
-public:
+private:
 	string version;
-	string key;
-	string value;
+
+public:
+	string message;
+	map<string, string> values;
 
 	PsrMessage();
-	PsrMessage(string);
+	PsrMessage(const string&);
 	PsrMessage(Connection&);
 	string compile();
-	void setAddresses(const vector<string>&);
-	void setSites(const vector<string>&);
+
 	vector<string> getHosts();
-	void setMessage(string);
+	vector<string> getAnnounced(string&);
+
+	void setResolve(const string&);
+	void setAddresses(const vector<string>&);
+	void setSites(const vector<string>&, const string&);
+	void setOk();
+	void setInvalid();
 
 	static uint16_t portFromAddress(const string&);
 	static string addressFromAddress(const string&);
