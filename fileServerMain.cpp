@@ -4,18 +4,18 @@
 #include <thread>
 #include <sys/errno.h>
 #include <unistd.h>
+#include <regex>
 #include "Utilities/Log.h"
 #include "TCP/ServerConnection.h"
 #include "HTTP/HttpRequest.h"
 #include "HTTP/HttpResponse.h"
 #include "HTTP/FileServer.h"
 #include "PSR/PsrMessage.h"
+#include "Utilities/IniReader.h"
 
 using namespace std;
 
-#define SERVER_PORT_MIN 20000
-#define SERVER_PORT_MAX 49990
-
+string confFilePath = "/var/webr/server.conf";
 string notfound = "<html><head><title>Not found</title></head><body><h1>Not found</h1>The requested object could not be found on this server</body></html>";
 FileServer fs;
 
@@ -103,32 +103,42 @@ void connectionThread(Connection* client) {
 }
 
 int main(int argc, char* argv[]) {
-	Log::setLogLevel(LogLevel::TRACE);
+	string serverAddress = "127.0.0.1:4011"; //default address and port
+	string resolverAddress = "127.0.0.1:3921"; //default resolver
 
-	srand(time(NULL));
-	uint16_t serverport = (uint16_t)(rand() % (SERVER_PORT_MAX - SERVER_PORT_MIN) + SERVER_PORT_MIN);
-
-	//argument parsing
-	int getoptResult;
-	while ((getoptResult = getopt(argc, argv, "p:")) != -1) {
-		switch (getoptResult) {
-			case 'p':
-				sscanf(optarg, "%hu", &serverport);
-				break;
-			case '?':
-				if (optopt == 'p')
-					Log::e("Option -p requires an argument.\n");
-				else if (isprint(optopt))
-					Log::w("Unknown option `" + to_string(optopt) + "'.\n");
-				break;
-			default:
-				Log::f("Error while parsing command line args: ");
+	Log::d("Reading configuration file...");
+	IniReader ir;
+	ir.readFromFile(confFilePath);
+	if (ir.properties.find("address") != ir.properties.end()) {
+		if (regex_match(ir.properties["address"], regex("[a-z.0-9]+:[0-9]{1,5}")))
+			serverAddress = ir.properties["address"];
+	}
+	if (ir.properties.find("resolver") != ir.properties.end()) {
+		if (regex_match(ir.properties["resolver"], regex("[a-z.0-9]+:[0-9]{1,5}")))
+			resolverAddress = ir.properties["resolver"];
+	}
+	if (ir.properties.find("loglevel") != ir.properties.end()) {
+		string level = ir.properties["loglevel"];
+		if (level == "trace") {
+			Log::setLogLevel(LogLevel::TRACE);
+		} else if (level == "debug") {
+			Log::setLogLevel(LogLevel::DEBUG);
+		} else if (level == "warn") {
+			Log::setLogLevel(LogLevel::WARN);
+		} else if (level == "error") {
+			Log::setLogLevel(LogLevel::ERROR);
 		}
 	}
 
-	Log::d("Announcing sites to resolver");
-	//FIXME: hardcoded resolver address and port
-	Connection* c = new Connection("127.0.0.1", 3921, "127.0.0.1", serverport);
+	uint16_t serverport = PsrMessage::portFromAddress(serverAddress);
+
+	Log::d("Announcing sites to resolver...");
+	Connection* c = new Connection(
+			PsrMessage::addressFromAddress(resolverAddress),
+			PsrMessage::portFromAddress(resolverAddress),
+			"127.0.0.1", //must be a local address, do not change
+			serverport
+	);
 	PsrMessage pm;
 	pm.setSites(fs.getSiteList());
 	c->sendStr(pm.compile());

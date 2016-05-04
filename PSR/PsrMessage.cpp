@@ -31,7 +31,7 @@ PsrMessage::PsrMessage(Connection& connection) {
 	value = content.substr(index + 2, content.find("\r\n", index + 2) - index - 2);
 }
 
-uint16_t PsrMessage::portFromAddress(string address) {
+uint16_t PsrMessage::portFromAddress(const string& address) {
 	size_t index = address.find(":");
 	if (index == string::npos) {
 		return 0;
@@ -43,7 +43,7 @@ uint16_t PsrMessage::portFromAddress(string address) {
 	return out;
 }
 
-string PsrMessage::addressFromAddress(string address) {
+string PsrMessage::addressFromAddress(const string& address) {
 	size_t index = address.find(":");
 	if (index == string::npos) {
 		return "";

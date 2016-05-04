@@ -22,8 +22,8 @@ public:
 	vector<string> getHosts();
 	void setMessage(string);
 
-	static uint16_t portFromAddress(string);
-	static string addressFromAddress(string);
+	static uint16_t portFromAddress(const string&);
+	static string addressFromAddress(const string&);
 };
 
 
