@@ -12,11 +12,11 @@
 #include "../Utilities/Log.h"
 
 
-Connection::Connection(int sockfd) : sockfd(sockfd), recvBufPos(0) {
+Connection::Connection(int sockfd) : sockfd(sockfd), recvBufPos(0), errorCode(0) {
 	Log::t("Creating Connection from existing socket " + to_string(sockfd));
 }
 
-Connection::Connection(const string& host, uint16_t port) : recvBufPos(0) {
+Connection::Connection(const string& host, uint16_t port) : recvBufPos(0), errorCode(0) {
 	addrinfo host_info;
 	addrinfo* host_info_list;
 
@@ -55,7 +55,7 @@ Connection::Connection(const string& host, uint16_t port) : recvBufPos(0) {
 }
 
 Connection::Connection(const string& destHost, uint16_t destPort, const string& sourceHost, uint16_t sourcePort)
-		: recvBufPos(0) {
+		: recvBufPos(0), errorCode(0) {
 	addrinfo host_info = {};
 	addrinfo* host_info_list;
 	sockaddr_in sin = {};
@@ -109,7 +109,7 @@ Connection::~Connection() {
 	close(sockfd);
 }
 
-int Connection::sendStr(const string& message) const {
+int Connection::sendStr(const string& message) {
 	int bytes = send(sockfd, message.c_str(), message.length(), 0);
 #ifdef PRINT_TEXT_CONN
 	Log::t("Connection " + to_string(sockfd) + " sent:\n" + message);
@@ -117,6 +117,9 @@ int Connection::sendStr(const string& message) const {
 	Log::t("Connection " + to_string(sockfd) + " sent " + to_string(bytes) + '/' + to_string(message.length()) +
 		   " bytes");
 #endif
+	if (bytes < 0) {
+		errorCode = errno;
+	}
 	return bytes;
 }
 

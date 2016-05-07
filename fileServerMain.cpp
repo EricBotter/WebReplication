@@ -32,58 +32,64 @@ void connectionThread(Connection* client) {
 
 			response.version = "HTTP/1.0";
 
-			string host = request.headers["Host"];
-
-			string content;
-
-			if (request.url.find("?sig", request.url.length() - 4) != string::npos) {
-				string originalUrl = request.url.substr(0, request.url.length() - 4);
-				content = fs.getSignature(host, originalUrl + ".sig");
-				if (content == "" && request.url == "/?sig") {
-					content = fs.getSignature(host, originalUrl + "index.sig");
-					if (content == "") {
-						content = fs.getSignature(host, originalUrl + "index.html.sig");
-					}
-				}
-			}
-			else {
-				content = fs.getFile(host, request.url);
-				if (content == "" && *request.url.rbegin() == '/') {
-					content = fs.getFile(host, request.url + "index");
-					if (content == "") {
-						content = fs.getFile(host, request.url + "index.html");
-					}
-				}
-			}
-
-			if (content == "") {
-				response.responseCode = "404";
-				response.responseText = "Not Found";
-
-				stringstream ss;
-				ss << notfound.length();
-
-				response.headers.insert({"Connection", "keep-alive"});
-				response.headers.insert({"Content-Type", "text/html"});
-				response.headers.insert({"Content-Length", ss.str()});
-
-				response.contentLength = notfound.length();
-				response.content = new char[notfound.length()];
-				memcpy(response.content, notfound.c_str(), notfound.length());
-			} else {
+			if (request.headers.find("X-Resolver") != request.headers.end()) {
 				response.responseCode = "200";
 				response.responseText = "OK";
+				response.headers = {{"X-Resolver",  "ok"},
+									{"Connection", "close"}};
+			} else {
+				string host = request.headers["Host"];
+				string content;
 
-				stringstream ss;
-				ss << content.length();
+				if (request.url.find("?sig", request.url.length() - 4) != string::npos) {
+					string originalUrl = request.url.substr(0, request.url.length() - 4);
+					content = fs.getSignature(host, originalUrl + ".sig");
+					if (content == "" && request.url == "/?sig") {
+						content = fs.getSignature(host, originalUrl + "index.sig");
+						if (content == "") {
+							content = fs.getSignature(host, originalUrl + "index.html.sig");
+						}
+					}
+				}
+				else {
+					content = fs.getFile(host, request.url);
+					if (content == "" && *request.url.rbegin() == '/') {
+						content = fs.getFile(host, request.url + "index");
+						if (content == "") {
+							content = fs.getFile(host, request.url + "index.html");
+						}
+					}
+				}
 
-				response.headers.insert({"Content-Type", FileServer::mimeFromFilename(request.url)});
-				response.headers.insert({"Content-Length", ss.str()});
-				response.headers.insert({"Connection", "keep-alive"});
+				if (content == "") {
+					response.responseCode = "404";
+					response.responseText = "Not Found";
 
-				response.contentLength = content.length();
-				response.content = new char[content.length()];
-				memcpy(response.content, content.c_str(), content.length());
+					stringstream ss;
+					ss << notfound.length();
+
+					response.headers.insert({"Connection", "keep-alive"});
+					response.headers.insert({"Content-Type", "text/html"});
+					response.headers.insert({"Content-Length", ss.str()});
+
+					response.contentLength = notfound.length();
+					response.content = new char[notfound.length()];
+					memcpy(response.content, notfound.c_str(), notfound.length());
+				} else {
+					response.responseCode = "200";
+					response.responseText = "OK";
+
+					stringstream ss;
+					ss << content.length();
+
+					response.headers.insert({"Content-Type", FileServer::mimeFromFilename(request.url)});
+					response.headers.insert({"Content-Length", ss.str()});
+					response.headers.insert({"Connection", "keep-alive"});
+
+					response.contentLength = content.length();
+					response.content = new char[content.length()];
+					memcpy(response.content, content.c_str(), content.length());
+				}
 			}
 
 			client->sendStr(response.compile());
@@ -139,8 +145,19 @@ int main(int argc, char* argv[]) {
 			"127.0.0.1", //must be a local address, do not change
 			serverport
 	);
+	while (c->error() && serverport < 50000) {
+		delete c;
+		serverport += 1;
+		this_thread::sleep_for(chrono::seconds(2));
+		c = new Connection(
+				PsrMessage::addressFromAddress(resolverAddress),
+				PsrMessage::portFromAddress(resolverAddress),
+				"127.0.0.1", //as above - will fix this soon
+				serverport
+		);
+	}
 	PsrMessage pm;
-	pm.setSites(fs.getSiteList(), serverAddress);
+	pm.setSites(fs.getSiteList(), PsrMessage::addressFromAddress(serverAddress) + ":" + to_string(serverport));
 	c->sendStr(pm.compile());
 	pm = PsrMessage(*c);
 	if (pm.message != "OK") {

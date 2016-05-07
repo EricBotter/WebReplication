@@ -21,7 +21,7 @@ public:
 	Connection(const string&, uint16_t);
 	Connection(const string&, uint16_t, const string&, uint16_t); //Deprecated
 	~Connection();
-	int sendStr(const string&) const;
+	int sendStr(const string&);
 	//receive until delimiter
 	string receive(const string&);
 	//receive given bytes
