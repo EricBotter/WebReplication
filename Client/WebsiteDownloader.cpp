@@ -30,10 +30,10 @@ vector<string> WebsiteDownloader::resolve(string hostname) {
 	map<string, vector<string>>::iterator it;
 
 	resolutionsMutex.lock();
-	it = resolutions.find(hostname);
+	it = resolutionCache.find(hostname);
 	resolutionsMutex.unlock();
 
-	if (it != resolutions.end()) {
+	if (it != resolutionCache.end()) {
 		hosts = it->second;
 	} else {
 		PsrMessage psrRequest;
@@ -47,7 +47,7 @@ vector<string> WebsiteDownloader::resolve(string hostname) {
 		hosts = psrResponse.getHosts();
 
 		resolutionsMutex.lock();
-		resolutions.insert({hostname, hosts});
+		resolutionCache.insert({hostname, hosts});
 		resolutionsMutex.unlock();
 	}
 
@@ -62,10 +62,9 @@ void WebsiteDownloader::threadFunction() {
 			break;
 		}
 		string website = request->getWebsite();
-		vector<string> resolutions = resolve(website);
-		randomServerFromList(resolutions)->enqueueRequest(request->getObject());
+		serverFromWebsite(website)->enqueueRequest(request->getObject());
 		if (request->canBeVerified())
-			randomServerFromList(resolutions)->enqueueRequest(request->getSignature());
+			serverFromWebsite(website)->enqueueRequest(request->getSignature());
 		Log::t("Sent requests for url <" + request->getWebsite() + request->getObjectUrl() + '>');
 	}
 }
@@ -74,24 +73,62 @@ void WebsiteDownloader::enqueueRequest(shared_ptr<VerifiedObjectRequest> request
 	requestQueue.push(request);
 }
 
-//TODO: make this a load balancer
-shared_ptr<HttpClientConnection> WebsiteDownloader::randomServerFromList(const vector<string>& resolutions) {
-	shared_ptr<HttpClientConnection> out = nullptr;
-	while (out == nullptr) {
-		string randomServer = resolutions[rand() % resolutions.size()];
+shared_ptr<HttpClientConnection> WebsiteDownloader::serverFromWebsite(const string& website) {
+	shared_ptr<HttpClientConnection> bestConnection = nullptr;
+	while (bestConnection == nullptr) {
+		vector<string> resolutions = resolve(website);
+		vector<shared_ptr<HttpClientConnection>> existingConnections;
+
+		// check for non-connected servers -- also collect existingConnections
 		connectionsMutex.lock();
-		if (connections.find(randomServer) == connections.end()) {
-			connections.insert({randomServer, make_shared<HttpClientConnection>(
-					PsrMessage::addressFromAddress(randomServer),
-					PsrMessage::portFromAddress(randomServer)
-			)});
-			connections[randomServer]->run();
-		} else if (!connections[randomServer]->isActive()) {
-			connections.erase(randomServer);
-			continue;
+		for (auto it = resolutions.begin(); it != resolutions.end(); ++it) {
+			auto connection = connections.find(*it);
+			if (connection != connections.end()) {
+				if (connection->second->isActive())
+					existingConnections.push_back(connection->second);
+				else {
+					connection->second->join();
+					connections.erase(connection);
+				}
+			} else {
+				bestConnection = make_shared<HttpClientConnection>(
+						PsrMessage::addressFromAddress(*it),
+						PsrMessage::portFromAddress(*it)
+				);
+				if (bestConnection->isActive()) {
+					connections.insert({{*it, bestConnection}});
+					bestConnection->run();
+					connectionsMutex.unlock();
+					return bestConnection;
+				} else {
+					bestConnection = nullptr;
+					// invalidate cache -- connection to resolved server failed
+					resolutionsMutex.lock();
+					resolutionCache.erase(resolutionCache.begin(), resolutionCache.end());
+					resolutionsMutex.unlock();
+				}
+			}
 		}
-		out = connections[randomServer];
+		connectionsMutex.unlock();
+
+		// if all servers are already connected, take the one with the least elements in queue
+		if (existingConnections.size() != 0) {
+			bestConnection = *existingConnections.begin();
+			size_t min = bestConnection->queueLength();
+			for (auto it = existingConnections.begin() + 1; it != existingConnections.end(); ++it) {
+				if ((*it)->queueLength() < min) {
+					bestConnection = *it;
+					min = bestConnection->queueLength();
+				}
+			}
+		} else {
+			// if no suitable servers are found, then invalidate cache, wait 5sec for resolver to update and try again
+			resolutionsMutex.lock();
+			resolutionCache.erase(resolutionCache.begin(), resolutionCache.end());
+			resolutionsMutex.unlock();
+			Log::w("Unable to find a server hosting <" + website + ">, trying again in 2 seconds");
+			this_thread::sleep_for(chrono::seconds(2));
+		}
 	}
-	connectionsMutex.unlock();
-	return out;
+	return bestConnection;
 }

@@ -16,6 +16,7 @@ public:
 	void enqueueRequest(shared_ptr<ObjectRequest>);
 	void join();
 	bool isActive();
+	size_t queueLength();
 
 private:
 	void readerFunction();

@@ -4,7 +4,10 @@
 HttpClientConnection::HttpClientConnection(string host, uint16_t port)
 		: httpReader(NULL), httpWriter(NULL), active(true) {
 	connection = new Connection(host, port);
-	connection->setTimeout(700);
+	if (connection->error())
+		active = false;
+	else
+		connection->setTimeout(700);
 }
 
 HttpClientConnection::~HttpClientConnection() {
@@ -94,8 +97,13 @@ bool HttpClientConnection::isActive() {
 }
 
 void HttpClientConnection::makeInactive() {
-	if (!active) {
+	if (active) {
 		active = false;
 		requestQueue.push(NULL);
+		responseQueue.push(NULL);
 	}
+}
+
+size_t HttpClientConnection::queueLength() {
+	return requestQueue.length() + responseQueue.length();
 }

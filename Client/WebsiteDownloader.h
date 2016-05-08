@@ -23,9 +23,9 @@ public:
 private:
 	void threadFunction();
 	vector<string> resolve(string);
-	shared_ptr<HttpClientConnection> randomServerFromList(const vector<string>&);
+	shared_ptr<HttpClientConnection> serverFromWebsite(const string&);
 
-	map<string, vector<string>> resolutions;
+	map<string, vector<string>> resolutionCache;
 	vector<thread> threads;
 	mutex resolutionsMutex;
 
