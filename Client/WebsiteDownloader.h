@@ -19,10 +19,11 @@ public:
 	WebsiteDownloader();
 	~WebsiteDownloader();
 	void enqueueRequest(shared_ptr<VerifiedObjectRequest>);
+	void setResolverAddress(const string&);
 
 private:
 	void threadFunction();
-	vector<string> resolve(string);
+	vector<string> resolve(const string&);
 	shared_ptr<HttpClientConnection> serverFromWebsite(const string&);
 
 	map<string, vector<string>> resolutionCache;
@@ -34,6 +35,7 @@ private:
 	map<string, shared_ptr<HttpClientConnection>> connections;
 
 	bool active = true;
+	string resolverAddress;
 };
 
 

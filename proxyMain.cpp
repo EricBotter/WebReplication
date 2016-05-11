@@ -2,14 +2,17 @@
 #include <cstring>
 #include <sstream>
 #include <thread>
+#include <regex>
 #include "Utilities/Log.h"
+#include "Utilities/IniReader.h"
 #include "TCP/ServerConnection.h"
 #include "Client/ProxyThread.h"
-#include "PSR/PsrMessage.h"
 
 using namespace std;
 
 #define SERVER_PORT 8000
+
+const string confFilePath = "/var/webr/proxy.conf";
 
 WebsiteDownloader downloader;
 
@@ -25,6 +28,30 @@ void connectionThread(Connection* browser) {
 
 int main() {
 	Log::setLogLevel(LogLevel::TRACE);
+
+	Log::d("Reading configuration file...");
+	IniReader ir;
+	ir.readFromFile(confFilePath);
+	if (ir.properties.find("verification") != ir.properties.end()) {
+		if (ir.properties["verification"] == "disabled")
+			; //disable verification
+	}
+	if (ir.properties.find("resolver") != ir.properties.end()) {
+		if (regex_match(ir.properties["resolver"], regex("[a-z.0-9]+:[0-9]{1,5}")))
+			downloader.setResolverAddress(ir.properties["resolver"]);
+	}
+	if (ir.properties.find("loglevel") != ir.properties.end()) {
+		string level = ir.properties["loglevel"];
+		if (level == "trace") {
+			Log::setLogLevel(LogLevel::TRACE);
+		} else if (level == "debug") {
+			Log::setLogLevel(LogLevel::DEBUG);
+		} else if (level == "warn") {
+			Log::setLogLevel(LogLevel::WARN);
+		} else if (level == "error") {
+			Log::setLogLevel(LogLevel::ERROR);
+		}
+	}
 
 	Log::d("Starting server on port 8000");
 	ServerConnection sc(SERVER_PORT);

@@ -4,9 +4,8 @@
 
 #define N_THREADS 4
 
-string resolverAddress = "127.0.0.1:3921";
 
-WebsiteDownloader::WebsiteDownloader() {
+WebsiteDownloader::WebsiteDownloader() : resolverAddress("127.0.0.1:3921") {
 	threads.reserve(N_THREADS);
 	for (int i = 0; i < N_THREADS; ++i) {
 		threads.push_back(thread(&WebsiteDownloader::threadFunction, this));
@@ -21,7 +20,7 @@ WebsiteDownloader::~WebsiteDownloader() {
 	}
 }
 
-vector<string> WebsiteDownloader::resolve(string hostname) {
+vector<string> WebsiteDownloader::resolve(const string& hostname) {
 	if (hostname.find(".peer") == string::npos)
 		//FIXME: horrendous hack
 		return {hostname + ":80"};
@@ -131,4 +130,8 @@ shared_ptr<HttpClientConnection> WebsiteDownloader::serverFromWebsite(const stri
 		}
 	}
 	return bestConnection;
+}
+
+void WebsiteDownloader::setResolverAddress(const string& newAddress) {
+	resolverAddress = newAddress;
 }
