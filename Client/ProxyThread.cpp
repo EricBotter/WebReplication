@@ -2,13 +2,17 @@
 #include "ProxyThread.h"
 #include "../Utilities/Log.h"
 
-string notVerifiedEntity = string("<html><head><title>Website not verified</title></head><body>") +
-						   "<h2>Unable to verify the content of the requested resource</h2>" +
-						   "</body></html>";
-string notVerifiableEntity = string("<html><head><title>Website not verifiable</title></head><body>") +
-							 "<h2>Unable to verify the content of the requested resource</h2>" +
-							 "The proxy does not have the public key needed to verify the content of this website." +
-							 "</body></html>";
+const string notVerifiedEntity = "<html><head><title>Website not verified</title></head><body>"
+		"<h2>Unable to verify the content of the requested resource</h2>"
+		"</body></html>";
+const string notVerifiableEntity = "<html><head><title>Website not verifiable</title></head><body>"
+		"<h2>Unable to verify the content of the requested resource</h2>"
+		"The proxy does not have the public key needed to verify the content of this website."
+		"</body></html>";
+const string notSolvableEntity = "<html><head><title>Object not solvable</title></head><body>"
+		"<h2>Too many retries</h2>"
+		"The network encountered an error when trying to retrieve this object."
+		"</body></html>";
 
 ProxyThread::ProxyThread(Connection& c, WebsiteDownloader& downloader)
 		: connection(c), downloader(downloader), httpReader(NULL), httpWriter(NULL) { }
@@ -52,31 +56,60 @@ void ProxyThread::writerFunction() {
 		request->waitForVerification();
 		if (request->hasFailed()) {
 			// retrying request if it fails
-			Log::t("Failed request for url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() + ">, retrying");
-			shared_ptr<VerifiedObjectRequest> temp = make_shared<VerifiedObjectRequest>(request->getObject()->getHttpRequest());
-			queue.push(temp);
-			downloader.enqueueRequest(temp);
+			if (request->retryThisRequest()) {
+				Log::t("Failed request for url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() +
+					   ">, retrying");
+				queue.push(request);
+				downloader.enqueueRequest(request);
+			} else {
+				//request failed too many times, unable to serve it
+				//TODO: make this "static"
+				HttpResponse notSolvable;
+				notSolvable.version = "HTTP/1.0";
+				notSolvable.responseCode = "404";
+				notSolvable.responseText = "Not Found";
+				notSolvable.headers = {
+						{"Content-Type",   "text/html"},
+						{"Content-Length", to_string(notSolvableEntity.length())},
+						{"Connection",     "keep-alive"}
+				};
+				notSolvable.contentLength = notSolvableEntity.length();
+				notSolvable.content = new char[notSolvable.contentLength];
+				memcpy(notSolvable.content, notSolvableEntity.c_str(), notSolvable.contentLength);
+				connection.sendStr(notSolvable.compile());
+				Log::t("404'd request of url <" + request->getObjectUrl() + "> of site <" +
+					   request->getWebsite() + "> for too many retries.");
+			}
 		}
 		else if (request->canBeVerified()) {
 			if (request->isVerified()) {
 				connection.sendStr(request->getObject()->getHttpResponse().compile());
-				Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() + '>');
+				Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() +
+					   '>');
 			} else {
-				//TODO: make this "static"
-				HttpResponse notVerified;
-				notVerified.version = "HTTP/1.0";
-				notVerified.responseCode = "500";
-				notVerified.responseText = "Internal Server Error";
-				notVerified.headers = {
-						{"Content-Type",   "text/html"},
-						{"Content-Length", to_string(notVerifiedEntity.length())},
-						{"Connection",     "keep-alive"}
-				};
-				notVerified.contentLength = notVerifiedEntity.length();
-				notVerified.content = new char[notVerifiedEntity.length()];
-				memcpy(notVerified.content, notVerifiedEntity.c_str(), notVerified.contentLength);
-				connection.sendStr(notVerified.compile());
-				Log::t("500'd request of non-verified url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() + '>');
+				if (request->retryThisRequest()) {
+					Log::t("Failed request of non-verified url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() +
+						   ">, retrying");
+					queue.push(request);
+					downloader.enqueueRequest(request);
+				} else {
+					//TODO: make this "static"
+					HttpResponse notVerified;
+					notVerified.version = "HTTP/1.0";
+					notVerified.responseCode = "500";
+					notVerified.responseText = "Internal Server Error";
+					notVerified.headers = {
+							{"Content-Type",   "text/html"},
+							{"Content-Length", to_string(notVerifiedEntity.length())},
+							{"Connection",     "keep-alive"}
+					};
+					notVerified.contentLength = notVerifiedEntity.length();
+					notVerified.content = new char[notVerifiedEntity.length()];
+					memcpy(notVerified.content, notVerifiedEntity.c_str(), notVerified.contentLength);
+					connection.sendStr(notVerified.compile());
+					Log::t("500'd request of non-verified url <" + request->getObjectUrl() + "> of site <" +
+						   request->getWebsite() + '>');
+				}
 			}
 		} else {
 			if (request->getWebsite().find(".peer", request->getWebsite().length() - 5) != string::npos) {
@@ -94,10 +127,12 @@ void ProxyThread::writerFunction() {
 				notVerifiable.content = new char[notVerifiableEntity.length()];
 				memcpy(notVerifiable.content, notVerifiableEntity.c_str(), notVerifiable.contentLength);
 				connection.sendStr(notVerifiable.compile());
-				Log::t("500'd request of url <" + request->getObjectUrl() + "> of non-verifiable site <" + request->getWebsite() + '>');
+				Log::t("500'd request of url <" + request->getObjectUrl() + "> of non-verifiable site <" +
+					   request->getWebsite() + '>');
 			} else {
 				connection.sendStr(request->getObject()->getHttpResponse().compile());
-				Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() + '>');
+				Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() +
+					   '>');
 			}
 		}
 	}

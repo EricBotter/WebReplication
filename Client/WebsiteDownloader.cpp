@@ -4,7 +4,6 @@
 
 #define N_THREADS 4
 
-
 WebsiteDownloader::WebsiteDownloader() : resolverAddress("127.0.0.1:3921") {
 	threads.reserve(N_THREADS);
 	for (int i = 0; i < N_THREADS; ++i) {

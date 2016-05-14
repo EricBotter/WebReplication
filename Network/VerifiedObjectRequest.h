@@ -10,6 +10,7 @@ private:
 	shared_ptr<ObjectRequest> signature;
 	bool verificationDone;
 	bool verified;
+	int retries;
 public:
 	VerifiedObjectRequest(const HttpRequest&);
 	VerifiedObjectRequest(shared_ptr<ObjectRequest>);
@@ -21,6 +22,7 @@ public:
 	bool isVerified();
 	bool hasFailed();
 	bool waitForVerification();
+	bool retryThisRequest();
 };
 
 

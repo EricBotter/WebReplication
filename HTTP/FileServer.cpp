@@ -5,6 +5,8 @@
 #include "FileServer.h"
 #include "../Utilities/Log.h"
 
+//#define ROGUE_SERVER
+
 const char* webpath = "/var/webr/websites/";
 const char* sigpath = "/var/webr/signatures/";
 const map<string, string> mimetypes = {
@@ -22,7 +24,17 @@ const map<string, string> mimetypes = {
 FileServer::FileServer() {
 }
 
+#ifdef ROGUE_SERVER
+int ai = 0;
 string FileServer::getFile(string site, string file) {
+	if (++ai > 3) { //non atomic, but we don't really care
+		ai = 0;
+		Log::e("### Sending arbitrary data ###");
+		return string(100, 'a');
+	}
+#else
+string FileServer::getFile(string site, string file) {
+#endif
 	string filepath = webpath + site + file;
 	struct stat s;
 	if (stat(filepath.c_str(), &s) == 0 && S_ISREG(s.st_mode)) {

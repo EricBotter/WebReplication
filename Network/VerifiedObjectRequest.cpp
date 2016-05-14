@@ -1,15 +1,17 @@
 #include "VerifiedObjectRequest.h"
 #include "FileVerifier.h"
 
+#define MAX_RETRIES 5
+
 VerifiedObjectRequest::VerifiedObjectRequest(const HttpRequest& request)
-		: verified(false), verificationDone(false) {
+		: verified(false), verificationDone(false), retries(0) {
 	object = make_shared<ObjectRequest>(request);
 	signature = make_shared<ObjectRequest>(request);
 	signature->getHttpRequest().url.append("?sig");
 }
 
 VerifiedObjectRequest::VerifiedObjectRequest(shared_ptr<ObjectRequest> objectRequest)
-		: object(objectRequest), verified(false), verificationDone(false) {
+		: object(objectRequest), verified(false), verificationDone(false), retries(0) {
 	signature = make_shared<ObjectRequest>(objectRequest->getHttpRequest());
 	signature->getHttpRequest().url.append("?sig");
 }
@@ -57,4 +59,12 @@ string VerifiedObjectRequest::getObjectUrl() {
 
 bool VerifiedObjectRequest::hasFailed() {
 	return object->hasFailed() || signature->hasFailed();
+}
+
+bool VerifiedObjectRequest::retryThisRequest() {
+	if (++retries >= MAX_RETRIES)
+		return false;
+	object = make_shared<ObjectRequest>(this->object->getHttpRequest());
+	signature = make_shared<ObjectRequest>(this->signature->getHttpRequest());
+	return true;
 }
