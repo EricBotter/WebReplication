@@ -12,8 +12,6 @@ namespace WebReplicationDemo
 {
     class NetworkEntity
     {
-        private delegate void ThreadReadingDelegate();
-
         public PictureBox pictureBox { get; private set; }
         public Label label { get; private set; }
         public List<string> log { get; private set; }
@@ -59,7 +57,15 @@ namespace WebReplicationDemo
         public void Kill()
         {
             if (!process.HasExited)
+            {
                 process.Kill();
+                pictureBox.Image = Properties.Resources.serverImageOff;
+            }
+        }
+
+        public bool hasExited()
+        {
+            return process.HasExited;
         }
 
         private void LogReaderMethod()

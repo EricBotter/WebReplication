@@ -15,6 +15,39 @@ namespace WebReplicationDemo
     {
         NetworkEntity resolver, proxy;
         List<NetworkEntity> fileservers = new List<NetworkEntity>();
+        NetworkEntity _activeServer;
+        NetworkEntity activeServer
+        {
+            get {
+                return _activeServer;
+            }
+            set {
+                if (_activeServer != null)
+                {
+                    _activeServer.pictureBox.BackColor = Color.Transparent;
+                }
+
+                _activeServer = value;
+                if (_activeServer == null)
+                {
+                    removeServerButton.Enabled = killServerButton.Enabled = false;
+                    logListBox.Items.Clear();
+                }
+                else
+                {
+                    _activeServer.pictureBox.BackColor = Color.LightBlue;
+                    if (_activeServer == proxy || _activeServer == resolver)
+                        removeServerButton.Enabled = killServerButton.Enabled = false;
+                    else
+                        killServerButton.Enabled = !(removeServerButton.Enabled = _activeServer.hasExited());
+
+                    logListBox.SuspendLayout();
+                    logListBox.Items.Clear();
+                    logListBox.Items.AddRange(_activeServer.log.ToArray());
+                    logListBox.ResumeLayout();
+                }
+            }
+        }
 
         #region Automatic image positions
         private Size serverImageSize
@@ -66,17 +99,15 @@ namespace WebReplicationDemo
 
         void proxyImage_Click(object sender, EventArgs e)
         {
-            logListBox.SuspendLayout();
-            logListBox.Items.Clear();
-            logListBox.Items.AddRange(proxy.log.ToArray());
-            logListBox.ResumeLayout();
+            activeServer = proxy;
         }
         void resolverImage_Click(object sender, EventArgs e)
         {
-            logListBox.SuspendLayout();
-            logListBox.Items.Clear();
-            logListBox.Items.AddRange(resolver.log.ToArray());
-            logListBox.ResumeLayout();
+            activeServer = resolver;
+        }
+        void serverImage_Click(object sender, EventArgs e)
+        {
+            activeServer = fileservers.AsEnumerable().First(x => x.pictureBox == (PictureBox)sender);
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -133,6 +164,7 @@ namespace WebReplicationDemo
         private void addServerButton_Click(object sender, EventArgs e)
         {
             NetworkEntity server = new NetworkEntity("FileServer");
+            server.pictureBox.Click += serverImage_Click;
             fileservers.Add(server);
             server.Start();
             serverDisplayPanel.Controls.Add(server.pictureBox);
@@ -148,6 +180,28 @@ namespace WebReplicationDemo
             proxy.Kill();
             foreach (NetworkEntity server in fileservers)
                 server.Kill();
+        }
+
+        private void killServerButton_Click(object sender, EventArgs e)
+        {
+            if (activeServer != null && activeServer != resolver && activeServer != proxy)
+            {
+                activeServer.Kill();
+                killServerButton.Enabled = !(removeServerButton.Enabled = true);
+            }
+        }
+
+        private void removeServerButton_Click(object sender, EventArgs e)
+        {
+            if (activeServer != null && activeServer != resolver && activeServer != proxy)
+            {
+                fileservers.Remove(activeServer);
+                serverDisplayPanel.Controls.Remove(activeServer.pictureBox);
+                activeServer = null;
+                killServerButton.Enabled = removeServerButton.Enabled = false;
+                
+                serverDisplayPanel_SizeChanged(sender, e);
+            }
         }
     }
 }

@@ -31,11 +31,14 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.serverDetailPanel = new System.Windows.Forms.Panel();
+            this.removeServerButton = new System.Windows.Forms.Button();
+            this.killServerButton = new System.Windows.Forms.Button();
+            this.logListBox = new System.Windows.Forms.ListBox();
             this.serverDisplayPanel = new System.Windows.Forms.Panel();
             this.controlPanel = new System.Windows.Forms.Panel();
-            this.addServerButton = new System.Windows.Forms.Button();
-            this.logListBox = new System.Windows.Forms.ListBox();
+            this.splitter1 = new System.Windows.Forms.Splitter();
             this.killChildrenButton = new System.Windows.Forms.Button();
+            this.addServerButton = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.serverDetailPanel.SuspendLayout();
             this.controlPanel.SuspendLayout();
@@ -64,6 +67,8 @@
             // serverDetailPanel
             // 
             this.serverDetailPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.serverDetailPanel.Controls.Add(this.removeServerButton);
+            this.serverDetailPanel.Controls.Add(this.killServerButton);
             this.serverDetailPanel.Controls.Add(this.logListBox);
             this.serverDetailPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.serverDetailPanel.Location = new System.Drawing.Point(1052, 4);
@@ -71,6 +76,42 @@
             this.serverDetailPanel.Name = "serverDetailPanel";
             this.serverDetailPanel.Size = new System.Drawing.Size(447, 739);
             this.serverDetailPanel.TabIndex = 2;
+            // 
+            // removeServerButton
+            // 
+            this.removeServerButton.Enabled = false;
+            this.removeServerButton.Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.removeServerButton.Location = new System.Drawing.Point(216, 10);
+            this.removeServerButton.Name = "removeServerButton";
+            this.removeServerButton.Size = new System.Drawing.Size(222, 60);
+            this.removeServerButton.TabIndex = 2;
+            this.removeServerButton.Text = "Remove Server";
+            this.removeServerButton.UseVisualStyleBackColor = true;
+            this.removeServerButton.Click += new System.EventHandler(this.removeServerButton_Click);
+            // 
+            // killServerButton
+            // 
+            this.killServerButton.Enabled = false;
+            this.killServerButton.Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.killServerButton.Location = new System.Drawing.Point(10, 10);
+            this.killServerButton.Name = "killServerButton";
+            this.killServerButton.Size = new System.Drawing.Size(200, 60);
+            this.killServerButton.TabIndex = 1;
+            this.killServerButton.Text = "Kill Server";
+            this.killServerButton.UseVisualStyleBackColor = true;
+            this.killServerButton.Click += new System.EventHandler(this.killServerButton_Click);
+            // 
+            // logListBox
+            // 
+            this.logListBox.BackColor = System.Drawing.SystemColors.ControlLightLight;
+            this.logListBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.logListBox.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.logListBox.FormattingEnabled = true;
+            this.logListBox.ItemHeight = 20;
+            this.logListBox.Location = new System.Drawing.Point(0, 97);
+            this.logListBox.Name = "logListBox";
+            this.logListBox.Size = new System.Drawing.Size(445, 640);
+            this.logListBox.TabIndex = 0;
             // 
             // serverDisplayPanel
             // 
@@ -88,6 +129,7 @@
             // 
             this.controlPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tableLayoutPanel1.SetColumnSpan(this.controlPanel, 2);
+            this.controlPanel.Controls.Add(this.splitter1);
             this.controlPanel.Controls.Add(this.killChildrenButton);
             this.controlPanel.Controls.Add(this.addServerButton);
             this.controlPanel.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -97,28 +139,13 @@
             this.controlPanel.Size = new System.Drawing.Size(1495, 317);
             this.controlPanel.TabIndex = 0;
             // 
-            // addServerButton
+            // splitter1
             // 
-            this.addServerButton.Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.addServerButton.Location = new System.Drawing.Point(10, 10);
-            this.addServerButton.Name = "addServerButton";
-            this.addServerButton.Size = new System.Drawing.Size(200, 60);
-            this.addServerButton.TabIndex = 0;
-            this.addServerButton.Text = "Add Server";
-            this.addServerButton.UseVisualStyleBackColor = true;
-            this.addServerButton.Click += new System.EventHandler(this.addServerButton_Click);
-            // 
-            // logListBox
-            // 
-            this.logListBox.BackColor = System.Drawing.SystemColors.Control;
-            this.logListBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.logListBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.logListBox.FormattingEnabled = true;
-            this.logListBox.ItemHeight = 20;
-            this.logListBox.Location = new System.Drawing.Point(0, 0);
-            this.logListBox.Name = "logListBox";
-            this.logListBox.Size = new System.Drawing.Size(445, 737);
-            this.logListBox.TabIndex = 0;
+            this.splitter1.Location = new System.Drawing.Point(0, 0);
+            this.splitter1.Name = "splitter1";
+            this.splitter1.Size = new System.Drawing.Size(3, 315);
+            this.splitter1.TabIndex = 2;
+            this.splitter1.TabStop = false;
             // 
             // killChildrenButton
             // 
@@ -130,6 +157,17 @@
             this.killChildrenButton.Text = "Terminate";
             this.killChildrenButton.UseVisualStyleBackColor = true;
             this.killChildrenButton.Click += new System.EventHandler(this.killChildrenButton_Click);
+            // 
+            // addServerButton
+            // 
+            this.addServerButton.Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.addServerButton.Location = new System.Drawing.Point(10, 10);
+            this.addServerButton.Name = "addServerButton";
+            this.addServerButton.Size = new System.Drawing.Size(200, 60);
+            this.addServerButton.TabIndex = 0;
+            this.addServerButton.Text = "Add Server";
+            this.addServerButton.UseVisualStyleBackColor = true;
+            this.addServerButton.Click += new System.EventHandler(this.addServerButton_Click);
             // 
             // Form1
             // 
@@ -161,6 +199,9 @@
         private System.Windows.Forms.Button addServerButton;
         private System.Windows.Forms.ListBox logListBox;
         private System.Windows.Forms.Button killChildrenButton;
+        private System.Windows.Forms.Splitter splitter1;
+        private System.Windows.Forms.Button killServerButton;
+        private System.Windows.Forms.Button removeServerButton;
 
 
     }

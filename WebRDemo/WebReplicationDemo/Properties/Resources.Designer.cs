@@ -73,6 +73,16 @@ namespace WebReplicationDemo.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap serverImageOff {
+            get {
+                object obj = ResourceManager.GetObject("serverImageOff", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap serverImageTrasp {
             get {
                 object obj = ResourceManager.GetObject("serverImageTrasp", resourceCulture);
