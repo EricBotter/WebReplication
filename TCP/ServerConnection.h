@@ -7,11 +7,13 @@
 class ServerConnection {
 private:
 	int sockfd;
+	int lastError = 0;
 public:
 	ServerConnection(uint16_t);
 	~ServerConnection();
 
 	Connection* takeConn();
+	int error();
 };
 
 
