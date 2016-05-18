@@ -138,24 +138,21 @@ int main(int argc, char* argv[]) {
 
 	uint16_t serverport = PsrMessage::portFromAddress(serverAddress);
 
+	Log::d("Starting server on port " + to_string(serverport));
+	ServerConnection* sc = new ServerConnection(serverport);
+	while (sc->error() && serverport < 50000) {
+		delete sc;
+		serverport += 1;
+		this_thread::sleep_for(chrono::seconds(1));
+		sc = new ServerConnection(serverport);
+		Log::d("Starting server on port " + to_string(serverport));
+	}
+
 	Log::d("Announcing sites to resolver...");
 	Connection* c = new Connection(
 			PsrMessage::addressFromAddress(resolverAddress),
-			PsrMessage::portFromAddress(resolverAddress),
-			"127.0.0.1", //must be a local address, do not change
-			serverport
+			PsrMessage::portFromAddress(resolverAddress)
 	);
-	while (c->error() && serverport < 50000) {
-		delete c;
-		serverport += 1;
-		this_thread::sleep_for(chrono::seconds(2));
-		c = new Connection(
-				PsrMessage::addressFromAddress(resolverAddress),
-				PsrMessage::portFromAddress(resolverAddress),
-				"127.0.0.1", //as above - will fix this soon
-				serverport
-		);
-	}
 	PsrMessage pm;
 	pm.setSites(fs.getSiteList(), PsrMessage::addressFromAddress(serverAddress) + ":" + to_string(serverport));
 	c->sendStr(pm.compile());
@@ -167,12 +164,10 @@ int main(int argc, char* argv[]) {
 
 	delete c;
 
-	Log::d("Starting server on port " + to_string(serverport));
-	ServerConnection sc(serverport);
 	Log::d("Server started. Waiting for connection.");
 
 	Connection* client;
-	while ((client = sc.takeConn()) != NULL) {
+	while ((client = sc->takeConn()) != NULL) {
 		thread(connectionThread, client).detach();
 	}
 
@@ -180,6 +175,8 @@ int main(int argc, char* argv[]) {
 	ss << "Error in receiving connections. Error (code " << errno << "):";
 	Log::f(ss.str());
 	Log::f(strerror(errno));
+
+	delete sc;
 
 	return 0;
 }

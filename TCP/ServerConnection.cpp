@@ -11,6 +11,8 @@ ServerConnection::ServerConnection(uint16_t port) {
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) {
 		Log::f("Unable to open listening socket: " + string(strerror(errno)));
+		lastError = errno;
+		return;
 	}
 
 	sockaddr_in server;
@@ -18,10 +20,16 @@ ServerConnection::ServerConnection(uint16_t port) {
 	server.sin_addr.s_addr = htonl(INADDR_ANY);
 	server.sin_port = htons(port);
 
-	if (bind(sockfd, (sockaddr*)&server, sizeof(server)) < 0)
+	if (bind(sockfd, (sockaddr*)&server, sizeof(server)) < 0) {
 		Log::f("Unable to bind socket " + to_string(sockfd) + ": " + string(strerror(errno)));
-	if (listen(sockfd, 5) < 0)
+		lastError = errno;
+		return;
+	}
+	if (listen(sockfd, 5) < 0) {
 		Log::f("Unable to listen on socket " + to_string(sockfd) + ": " + string(strerror(errno)));
+		lastError = errno;
+		return;
+	}
 }
 
 Connection* ServerConnection::takeConn() {
@@ -37,4 +45,10 @@ Connection* ServerConnection::takeConn() {
 ServerConnection::~ServerConnection() {
 	Log::t("Closing server socket " + to_string(sockfd));
 	close(sockfd);
+}
+
+int ServerConnection::error() {
+	int temp = lastError;
+	lastError = 0;
+	return temp;
 }
