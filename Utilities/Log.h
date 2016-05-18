@@ -3,6 +3,8 @@
 
 #include <fstream>
 
+#define LOG_P(x) Log::logToProgram((x))
+
 using namespace std;
 
 enum LogLevel {
@@ -13,6 +15,7 @@ class Log {
 private:
 	static LogLevel level;
 	static bool logToFile;
+	static bool logToProgramFlag;
 	static ofstream file;
 
 public:
@@ -20,6 +23,10 @@ public:
 		Log::level = level;
 	}
 	static void log(const string&, LogLevel);
+	static void logToProgram(const string&);
+	static void enableLogToProgram() {
+		logToProgramFlag = true;
+	}
 	static inline void t(const string& message) {
 		log(message, TRACE);
 	}

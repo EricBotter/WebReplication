@@ -4,8 +4,9 @@
 #include <iostream>
 
 // Log static variables
-LogLevel Log::level;
-bool Log::logToFile;
+LogLevel Log::level = LogLevel::WARN;
+bool Log::logToFile = false;
+bool Log::logToProgramFlag = false;
 ofstream Log::file;
 
 void Log::log(const string& message, LogLevel level) {
@@ -30,4 +31,11 @@ void Log::log(const string& message, LogLevel level) {
 	cout << ss.str();
 
 	cout.flush();
+}
+
+void Log::logToProgram(const string& message) {
+	if (!logToProgramFlag) return;
+
+	cerr << message << endl;
+	cerr.flush();
 }

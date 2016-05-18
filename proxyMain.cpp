@@ -20,13 +20,15 @@ void connectionThread(Connection* browser) {
 	ProxyThread pt(*browser, downloader);
 	Log::d("Connection received. Waiting for HTTP request.");
 	pt.runAndJoin();
-//	pt.run();
-//	pt.join();
 	delete browser;
 	Log::t("ProxyThread ended. Connection with browser closed.");
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+	if (argc >= 2 && strcmp(argv[1], "--program-log")) {
+		Log::enableLogToProgram();
+	}
+
 	Log::setLogLevel(LogLevel::TRACE);
 
 	Log::d("Reading configuration file...");
@@ -53,7 +55,8 @@ int main() {
 		}
 	}
 
-	Log::d("Starting server on port 8000");
+	Log::d("Starting server on port " + to_string(SERVER_PORT));
+	LOG_P("START " + to_string(SERVER_PORT));
 	ServerConnection sc(SERVER_PORT);
 	Log::d("Server started. Waiting for connection.");
 
@@ -66,6 +69,7 @@ int main() {
 	ss << "Error in receiving connections. Error (code " << errno << "):";
 	Log::f(ss.str());
 	Log::f(strerror(errno));
+	LOG_P("STOP");
 
 	return 0;
 }

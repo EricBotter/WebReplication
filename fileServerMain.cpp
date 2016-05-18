@@ -109,6 +109,10 @@ void connectionThread(Connection* client) {
 }
 
 int main(int argc, char* argv[]) {
+	if (argc >= 2 && strcmp(argv[1], "--program-log")) {
+		Log::enableLogToProgram();
+	}
+
 	string serverAddress = "127.0.0.1:4011"; //default address and port
 	string resolverAddress = "127.0.0.1:3921"; //default resolver
 
@@ -147,6 +151,7 @@ int main(int argc, char* argv[]) {
 		sc = new ServerConnection(serverport);
 		Log::d("Starting server on port " + to_string(serverport));
 	}
+	LOG_P("START " + to_string(serverport));
 
 	Log::d("Announcing sites to resolver...");
 	Connection* c = new Connection(
@@ -176,6 +181,7 @@ int main(int argc, char* argv[]) {
 	Log::f(ss.str());
 	Log::f(strerror(errno));
 
+	LOG_P("STOP");
 	delete sc;
 
 	return 0;

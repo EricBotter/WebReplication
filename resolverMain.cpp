@@ -49,11 +49,16 @@ void pollingThread() {
 	}
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+	if (argc >= 2 && strcmp(argv[1], "--program-log")) {
+		Log::enableLogToProgram();
+	}
+
 	Log::setLogLevel(LogLevel::TRACE);
 
 	Log::d("Starting server on port 3921");
 	ServerConnection sc(SERVER_PORT);
+	LOG_P("START " + to_string(SERVER_PORT));
 
 	Log::d("Starting polling thread");
 	thread polling(pollingThread);
@@ -90,6 +95,7 @@ int main() {
 	active = false;
 	Log::f("Error in receiving connections. Error (code " + to_string(errno) + "):");
 	Log::f(strerror(errno));
+	LOG_P("STOP");
 
 	return 0;
 }
