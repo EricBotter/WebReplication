@@ -12,10 +12,15 @@ namespace WebReplicationDemo
 {
     class NetworkEntity
     {
+        public static List<NetworkEntity> allEntities = new List<NetworkEntity>();
+
         public PictureBox pictureBox { get; private set; }
         public Label label { get; private set; }
         public List<string> log { get; private set; }
         public string name { get; private set; }
+        public int port { get; private set; }
+
+        public List<EntityConnection> clientConnections = new List<EntityConnection>();
 
         private Process process;
         private Thread logReader;
