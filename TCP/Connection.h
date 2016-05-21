@@ -19,7 +19,7 @@ public:
 	Connection(int);
 	//To be used by clients
 	Connection(const string&, uint16_t);
-	Connection(const string&, uint16_t, const string&, uint16_t); //Deprecated
+	//Destructor
 	~Connection();
 	int sendStr(const string&);
 	//receive until delimiter
@@ -31,8 +31,11 @@ public:
 	//sets Timeout after which connection fails
 	void setTimeout(long);
 
-		// Is non-zero if connection fails (equivalent of errno)
+	// Is non-zero if connection fails (equivalent of errno)
 	int error();
+
+	// Returns internal file descriptor (used for debugging)
+	int getfd();
 };
 
 

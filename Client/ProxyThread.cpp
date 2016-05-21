@@ -39,6 +39,7 @@ void ProxyThread::readerFunction() {
 	string reqStr = connection.receive("\r\n\r\n");
 	while (reqStr != "") {
 		HttpRequest hr(reqStr);
+		LOG_P("RECEIVED " + hr.url + ' ' + to_string(connection.getfd()));
 		hr.url = hr.url.substr(hr.url.substr(7).find('/') + 7);
 		shared_ptr<VerifiedObjectRequest> temp = make_shared<VerifiedObjectRequest>(hr);
 		queue.push(temp);
@@ -79,6 +80,7 @@ void ProxyThread::writerFunction() {
 				connection.sendStr(notSolvable.compile());
 				Log::t("404'd request of url <" + request->getObjectUrl() + "> of site <" +
 					   request->getWebsite() + "> for too many retries.");
+				LOG_P("EVADED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + " 404");
 			}
 		}
 		else if (request->canBeVerified()) {
@@ -86,9 +88,12 @@ void ProxyThread::writerFunction() {
 				connection.sendStr(request->getObject()->getHttpResponse().compile());
 				Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() +
 					   '>');
+				LOG_P("EVADED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + ' ' +
+					  request->getObject()->getHttpResponse().responseCode);
 			} else {
 				if (request->retryThisRequest()) {
-					Log::t("Failed request of non-verified url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() +
+					Log::t("Failed request of non-verified url <" + request->getObjectUrl() + "> of site <" +
+						   request->getWebsite() +
 						   ">, retrying");
 					queue.push(request);
 					downloader.enqueueRequest(request);
@@ -109,6 +114,7 @@ void ProxyThread::writerFunction() {
 					connection.sendStr(notVerified.compile());
 					Log::t("500'd request of non-verified url <" + request->getObjectUrl() + "> of site <" +
 						   request->getWebsite() + '>');
+					LOG_P("EVADED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + " 500");
 				}
 			}
 		} else {
@@ -129,10 +135,13 @@ void ProxyThread::writerFunction() {
 				connection.sendStr(notVerifiable.compile());
 				Log::t("500'd request of url <" + request->getObjectUrl() + "> of non-verifiable site <" +
 					   request->getWebsite() + '>');
+				LOG_P("EVADED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + " 500");
 			} else {
 				connection.sendStr(request->getObject()->getHttpResponse().compile());
 				Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() +
 					   '>');
+				LOG_P("EVADED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + ' ' +
+					  request->getObject()->getHttpResponse().responseCode);
 			}
 		}
 	}

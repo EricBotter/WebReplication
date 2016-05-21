@@ -35,11 +35,13 @@ void connectionThread(Connection* client) {
 			if (request.headers.find("X-Resolver") != request.headers.end()) {
 				response.responseCode = "200";
 				response.responseText = "OK";
-				response.headers = {{"X-Resolver",  "ok"},
+				response.headers = {{"X-Resolver", "ok"},
 									{"Connection", "close"}};
 			} else {
 				string host = request.headers["Host"];
 				string content;
+
+				LOG_P("RECEIVED " + host + request.url + ' ' + to_string(client->getfd()));
 
 				if (request.url.find("?sig", request.url.length() - 4) != string::npos) {
 					string originalUrl = request.url.substr(0, request.url.length() - 4);
@@ -90,6 +92,8 @@ void connectionThread(Connection* client) {
 					response.content = new char[content.length()];
 					memcpy(response.content, content.c_str(), content.length());
 				}
+				LOG_P("EVADED " + host + request.url + ' ' + to_string(client->getfd()) + ' ' +
+					  response.responseCode);
 			}
 
 			client->sendStr(response.compile());
@@ -97,6 +101,7 @@ void connectionThread(Connection* client) {
 				break;
 		} else {
 			client->sendStr("HTTP/1.1 501 Not Implemented\r\nConnection: close\r\n\r\n");
+			LOG_P("EVADED " + request.headers["Host"] + request.url + ' ' + to_string(client->getfd()) + " 501");
 			break;
 		}
 		Log::d("< Request completed");
@@ -109,7 +114,7 @@ void connectionThread(Connection* client) {
 }
 
 int main(int argc, char* argv[]) {
-	if (argc >= 2 && strcmp(argv[1], "--program-log")) {
+	if (argc >= 2 && strcmp(argv[1], "--program-log") == 0) {
 		Log::enableLogToProgram();
 	}
 

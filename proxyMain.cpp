@@ -25,7 +25,7 @@ void connectionThread(Connection* browser) {
 }
 
 int main(int argc, char* argv[]) {
-	if (argc >= 2 && strcmp(argv[1], "--program-log")) {
+	if (argc >= 2 && strcmp(argv[1], "--program-log") == 0) {
 		Log::enableLogToProgram();
 	}
 

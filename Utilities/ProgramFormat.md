@@ -1,4 +1,4 @@
-Messages from entities to server (v0.1)
+Messages from entities to server (v0.2)
 =======================================
 
 - `START <port>`
@@ -22,8 +22,15 @@ The program has received an HTTP request for the object `<url>` on the connectio
 - `REQUESTED <url> <socket>`
 The program has sent an HTTP request for the object `<url>` using the connection `<socket>`.
 
-- `COMPLETED <url> <socket>`
-The program has received the HTTP object `<url>` on the connection `<socket>`.
+- `COMPLETED <url> <socket> <response>`
+The program has received the HTTP object `<url>` on the connection `<socket>` with the `<response>` code.
 
 - `EVADED <url> <socket> <response>`
 The program has completed the HTTP request for `<url>` on the connection `<socket>` with the `<response>` code.
+
+- `TORESOLVE <website> <socket>`
+The program has sent/received a PSR request for the `<website>` on the connection `<socket>`.
+
+- `RESOLVED <website> <socket>`
+The program has sent/received a PSR response for the `<website>` on the connection `<socket>`.
+

@@ -50,7 +50,7 @@ void pollingThread() {
 }
 
 int main(int argc, char* argv[]) {
-	if (argc >= 2 && strcmp(argv[1], "--program-log")) {
+	if (argc >= 2 && strcmp(argv[1], "--program-log") == 0) {
 		Log::enableLogToProgram();
 	}
 
@@ -74,8 +74,11 @@ int main(int argc, char* argv[]) {
 
 		PsrMessage response;
 		if (request.message == "RESOLVE" && request.values.begin()->first == "Host") {
-			vector<string> addresses = resolver.resolve(request.values.begin()->second);
+			string hostname = request.values.begin()->second;
+			LOG_P("TORESOLVE " + hostname + ' ' + to_string(client->getfd()));
+			vector<string> addresses = resolver.resolve(hostname);
 			response.setAddresses(addresses);
+			LOG_P("RESOLVED " + hostname + ' ' + to_string(client->getfd()));
 		} else if (request.message == "ANNOUNCE") {
 			string server;
 			vector<string> hosts = request.getAnnounced(server);

@@ -35,6 +35,8 @@ void HttpClientConnection::writerFunction() {
 			   request->getHttpRequest().url + ">");
 		if (request->getHttpRequest().method == "GET") {
 			if (connection->sendStr(request->getHttpRequest().compile()) > 0) {
+				LOG_P("REQUESTED " + request->getHttpRequest().headers["Host"] + request->getHttpRequest().url +
+					  ' ' + to_string(connection->getfd()));
 				responseQueue.push(request);
 			} else {
 				request->setFailed();
@@ -63,6 +65,8 @@ void HttpClientConnection::readerFunction() {
 			} else {
 				request->setHttpResponse(hr);
 				request->setCompleted();
+				LOG_P("COMPLETED " + request->getHttpRequest().headers["Host"] + request->getHttpRequest().url +
+					  ' ' + to_string(connection->getfd()) + ' ' + hr.responseCode);
 			}
 		} else {
 			//TODO: make this static
@@ -77,6 +81,8 @@ void HttpClientConnection::readerFunction() {
 			notImplemented.contentLength = 0;
 			request->setHttpResponse(notImplemented);
 			request->setCompleted();
+			LOG_P("COMPLETED " + request->getHttpRequest().headers["Host"] + request->getHttpRequest().url +
+				  ' ' + to_string(connection->getfd()) + " 501");
 		}
 	}
 	Log::t("HttpClientConnection (reader) is ending.");

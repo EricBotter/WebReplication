@@ -14,6 +14,7 @@
 
 Connection::Connection(int sockfd) : sockfd(sockfd), recvBufPos(0), errorCode(0) {
 	Log::t("Creating Connection from existing socket " + to_string(sockfd));
+	LOG_P("CONNECTED " + to_string(sockfd));
 }
 
 Connection::Connection(const string& host, uint16_t port) : recvBufPos(0), errorCode(0) {
@@ -52,61 +53,13 @@ Connection::Connection(const string& host, uint16_t port) : recvBufPos(0), error
 	}
 
 	Log::t("Connection to host " + host + ':' + to_string(port) + " started on socket " + to_string(sockfd));
-}
-
-Connection::Connection(const string& destHost, uint16_t destPort, const string& sourceHost, uint16_t sourcePort)
-		: recvBufPos(0), errorCode(0) {
-	addrinfo host_info = {};
-	addrinfo* host_info_list;
-	sockaddr_in sin = {};
-	host_info.ai_family = AF_INET;
-	host_info.ai_socktype = SOCK_STREAM;
-	sin.sin_family = AF_INET;
-	sin.sin_port = htons(sourcePort);
-	inet_aton(sourceHost.c_str(), &sin.sin_addr);
-
-	Log::t("Connecting to " + destHost + " on port " + to_string(destPort) + ", from source address " + sourceHost +
-		   ':' + to_string(sourcePort));
-
-	int status;
-	status = getaddrinfo(destHost.c_str(), to_string(destPort).c_str(), &host_info, &host_info_list);
-	if (status != 0) {
-		errorCode = status == EAI_SYSTEM ? errno : -1;
-		Log::f("Error while DNS:");
-		Log::f(gai_strerror(status));
-		return;
-	}
-
-	sockfd = socket(host_info_list->ai_family, host_info_list->ai_socktype, host_info_list->ai_protocol);
-	if (sockfd < 0) {
-		errorCode = errno;
-		Log::f("Unable to open socket: ");
-		Log::f(strerror(errno));
-		return;
-	}
-
-	status = bind(sockfd, (sockaddr*)&sin, sizeof(sin));
-	if (status != 0) {
-		errorCode = errno;
-		Log::f("Error while binding to specified address:");
-		Log::f(strerror(errno));
-		return;
-	}
-
-	status = connect(sockfd, host_info_list->ai_addr, host_info_list->ai_addrlen);
-	if (status != 0) {
-		errorCode = errno;
-		Log::f("Error while connecting:");
-		Log::f(strerror(errno));
-		return;
-	}
-
-	Log::t("Connection established on socket " + to_string(sockfd));
+	LOG_P("CONNECT " + host + ' ' + to_string(port) + ' ' + to_string(sockfd));
 }
 
 Connection::~Connection() {
 	Log::t("Closing connection " + to_string(sockfd));
 	close(sockfd);
+	LOG_P("CLOSED " + to_string(sockfd));
 }
 
 int Connection::sendStr(const string& message) {
@@ -236,6 +189,10 @@ int Connection::error() {
 }
 
 void Connection::setTimeout(long milliseconds) {
-	struct timeval timeout = {milliseconds/1000, (milliseconds%1000)*1000};
+	struct timeval timeout = {milliseconds / 1000, (milliseconds % 1000) * 1000};
 	setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+}
+
+int Connection::getfd() {
+	return sockfd;
 }

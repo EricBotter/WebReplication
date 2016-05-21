@@ -8,6 +8,7 @@ LogLevel Log::level = LogLevel::WARN;
 bool Log::logToFile = false;
 bool Log::logToProgramFlag = false;
 ofstream Log::file;
+mutex Log::cerrMtx;
 
 void Log::log(const string& message, LogLevel level) {
 	if (level < Log::level) return;
@@ -36,6 +37,11 @@ void Log::log(const string& message, LogLevel level) {
 void Log::logToProgram(const string& message) {
 	if (!logToProgramFlag) return;
 
+	lock_guard<mutex> guard(cerrMtx);
 	cerr << message << endl;
 	cerr.flush();
+}
+
+void Log::enableLogToProgram() {
+	logToProgramFlag = true;
 }

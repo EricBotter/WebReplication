@@ -41,12 +41,14 @@ vector<string> WebsiteDownloader::resolve(const string& hostname) {
 				PsrMessage::portFromAddress(resolverAddress)
 		);
 		psrConn.sendStr(psrRequest.compile());
+		LOG_P("TORESOLVE " + hostname + ' ' + to_string(psrConn.getfd()));
 		PsrMessage psrResponse(psrConn);
 		hosts = psrResponse.getHosts();
 
 		resolutionsMutex.lock();
 		resolutionCache.insert({hostname, hosts});
 		resolutionsMutex.unlock();
+		LOG_P("RESOLVED " + hostname + ' ' + to_string(psrConn.getfd()));
 	}
 
 	return hosts;

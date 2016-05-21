@@ -2,8 +2,9 @@
 #define THESIS_LOG_H
 
 #include <fstream>
+#include <mutex>
 
-#define LOG_P(x) Log::logToProgram((x))
+#define LOG_P(x) Log::logToProgram(x)
 
 using namespace std;
 
@@ -17,6 +18,7 @@ private:
 	static bool logToFile;
 	static bool logToProgramFlag;
 	static ofstream file;
+	static mutex cerrMtx;
 
 public:
 	static void setLogLevel(LogLevel level) {
@@ -24,9 +26,7 @@ public:
 	}
 	static void log(const string&, LogLevel);
 	static void logToProgram(const string&);
-	static void enableLogToProgram() {
-		logToProgramFlag = true;
-	}
+	static void enableLogToProgram();
 	static inline void t(const string& message) {
 		log(message, TRACE);
 	}

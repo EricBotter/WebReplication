@@ -25,9 +25,9 @@ namespace WebReplicationDemo
         {
             this.name = name;
 
-            psi = new ProcessStartInfo(Properties.Settings.Default.rootPath + "/" + name + ".exe");
+            psi = new ProcessStartInfo(Properties.Settings.Default.rootPath + "/" + name + ".exe", "--program-log");
             psi.RedirectStandardInput = true;
-            psi.RedirectStandardOutput = true;
+            psi.RedirectStandardOutput = false;
             psi.RedirectStandardError = true;
             psi.UseShellExecute = false;
             psi.CreateNoWindow = true;
@@ -72,7 +72,7 @@ namespace WebReplicationDemo
         {
             log = new List<string>();
             string line;
-            while ((line = process.StandardOutput.ReadLine()) != null)
+            while ((line = process.StandardError.ReadLine()) != null)
                 log.Add(line);
         }
     }
