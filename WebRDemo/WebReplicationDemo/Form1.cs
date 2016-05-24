@@ -49,6 +49,8 @@ namespace WebReplicationDemo
             }
         }
 
+        int proxyLogLineParsed = 0;
+
         #region Automatic image positions
         private Size serverImageSize
         {
@@ -116,6 +118,7 @@ namespace WebReplicationDemo
             proxy.Start();
 
             serverDisplayPanel_SizeChanged(sender, e);
+            logUpdateTimer.Start();
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -201,6 +204,51 @@ namespace WebReplicationDemo
                 killServerButton.Enabled = removeServerButton.Enabled = false;
                 
                 serverDisplayPanel_SizeChanged(sender, e);
+            }
+        }
+
+        private void logUpdateTimer_Tick(object sender, EventArgs e)
+        {
+            for (; proxyLogLineParsed < proxy.log.Count; proxyLogLineParsed++)
+            {
+                string[] elements = proxy.log[proxyLogLineParsed].Split(' ');
+                switch (elements[0])
+                {
+                    case "REQUESTED":
+                        browserListView.Items.Add(new ListViewItem(new string[]{"...", elements[0], elements[1], elements[2]}));
+                        browserListView.Items[browserListView.Items.Count - 1].EnsureVisible();
+                        break;
+                    case "COMPLETED":
+                        foreach (ListViewItem item in browserListView.Items)
+                        {
+                            if (item.SubItems[2].Text == elements[1]) {
+                                item.SubItems[1].Text = elements[0];
+                                item.SubItems[0].Text = elements[3];
+                                if (elements[3] == "200")
+                                    item.BackColor = Color.LightGreen;
+                                else
+                                    item.BackColor = Color.Red;
+                                break;
+                            }
+                        }
+                        break;
+                    case "PROCESSED":
+                        foreach (ListViewItem item in browserListView.Items)
+                        {
+                            if (item.SubItems[2].Text == elements[1] || item.SubItems[2].Text == elements[1] + "?sig")
+                            {
+                                item.SubItems[1].Text = elements[0];
+                                item.SubItems[0].Text = elements[3];
+                                if (elements[3] == "200")
+                                    item.BackColor = Color.LightGreen;
+                                else
+                                    item.BackColor = Color.Yellow;
+                            }
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }

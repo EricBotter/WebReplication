@@ -80,7 +80,7 @@ void ProxyThread::writerFunction() {
 				connection.sendStr(notSolvable.compile());
 				Log::t("404'd request of url <" + request->getObjectUrl() + "> of site <" +
 					   request->getWebsite() + "> for too many retries.");
-				LOG_P("EVADED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + " 404");
+				LOG_P("PROCESSED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + " 404");
 			}
 		}
 		else if (request->canBeVerified()) {
@@ -88,7 +88,7 @@ void ProxyThread::writerFunction() {
 				connection.sendStr(request->getObject()->getHttpResponse().compile());
 				Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() +
 					   '>');
-				LOG_P("EVADED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + ' ' +
+				LOG_P("PROCESSED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + ' ' +
 					  request->getObject()->getHttpResponse().responseCode);
 			} else {
 				if (request->retryThisRequest()) {
@@ -114,7 +114,7 @@ void ProxyThread::writerFunction() {
 					connection.sendStr(notVerified.compile());
 					Log::t("500'd request of non-verified url <" + request->getObjectUrl() + "> of site <" +
 						   request->getWebsite() + '>');
-					LOG_P("EVADED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + " 500");
+					LOG_P("PROCESSED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + " 500");
 				}
 			}
 		} else {
@@ -135,12 +135,12 @@ void ProxyThread::writerFunction() {
 				connection.sendStr(notVerifiable.compile());
 				Log::t("500'd request of url <" + request->getObjectUrl() + "> of non-verifiable site <" +
 					   request->getWebsite() + '>');
-				LOG_P("EVADED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + " 500");
+				LOG_P("PROCESSED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + " 500");
 			} else {
 				connection.sendStr(request->getObject()->getHttpResponse().compile());
 				Log::t("Completed request of url <" + request->getObjectUrl() + "> of site <" + request->getWebsite() +
 					   '>');
-				LOG_P("EVADED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + ' ' +
+				LOG_P("PROCESSED " + request->getWebsite() + request->getObjectUrl() + ' ' + to_string(connection.getfd()) + ' ' +
 					  request->getObject()->getHttpResponse().responseCode);
 			}
 		}

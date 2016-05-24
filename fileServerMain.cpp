@@ -92,7 +92,7 @@ void connectionThread(Connection* client) {
 					response.content = new char[content.length()];
 					memcpy(response.content, content.c_str(), content.length());
 				}
-				LOG_P("EVADED " + host + request.url + ' ' + to_string(client->getfd()) + ' ' +
+				LOG_P("PROCESSED " + host + request.url + ' ' + to_string(client->getfd()) + ' ' +
 					  response.responseCode);
 			}
 
@@ -101,7 +101,7 @@ void connectionThread(Connection* client) {
 				break;
 		} else {
 			client->sendStr("HTTP/1.1 501 Not Implemented\r\nConnection: close\r\n\r\n");
-			LOG_P("EVADED " + request.headers["Host"] + request.url + ' ' + to_string(client->getfd()) + " 501");
+			LOG_P("PROCESSED " + request.headers["Host"] + request.url + ' ' + to_string(client->getfd()) + " 501");
 			break;
 		}
 		Log::d("< Request completed");

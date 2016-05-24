@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.serverDetailPanel = new System.Windows.Forms.Panel();
@@ -36,12 +37,21 @@
             this.logListBox = new System.Windows.Forms.ListBox();
             this.serverDisplayPanel = new System.Windows.Forms.Panel();
             this.controlPanel = new System.Windows.Forms.Panel();
-            this.splitter1 = new System.Windows.Forms.Splitter();
-            this.killChildrenButton = new System.Windows.Forms.Button();
+            this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.addServerButton = new System.Windows.Forms.Button();
+            this.killChildrenButton = new System.Windows.Forms.Button();
+            this.browserListView = new System.Windows.Forms.ListView();
+            this.statusColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.logEntryColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.urlColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.logUpdateTimer = new System.Windows.Forms.Timer(this.components);
+            this.socketColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tableLayoutPanel1.SuspendLayout();
             this.serverDetailPanel.SuspendLayout();
             this.controlPanel.SuspendLayout();
+            this.tableLayoutPanel2.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -129,9 +139,7 @@
             // 
             this.controlPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tableLayoutPanel1.SetColumnSpan(this.controlPanel, 2);
-            this.controlPanel.Controls.Add(this.splitter1);
-            this.controlPanel.Controls.Add(this.killChildrenButton);
-            this.controlPanel.Controls.Add(this.addServerButton);
+            this.controlPanel.Controls.Add(this.tableLayoutPanel2);
             this.controlPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.controlPanel.Location = new System.Drawing.Point(4, 747);
             this.controlPanel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 4);
@@ -139,24 +147,31 @@
             this.controlPanel.Size = new System.Drawing.Size(1495, 317);
             this.controlPanel.TabIndex = 0;
             // 
-            // splitter1
+            // tableLayoutPanel2
             // 
-            this.splitter1.Location = new System.Drawing.Point(0, 0);
-            this.splitter1.Name = "splitter1";
-            this.splitter1.Size = new System.Drawing.Size(3, 315);
-            this.splitter1.TabIndex = 2;
-            this.splitter1.TabStop = false;
+            this.tableLayoutPanel2.ColumnCount = 2;
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 220F));
+            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel2.Controls.Add(this.panel1, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this.browserListView, 1, 0);
+            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel2.Name = "tableLayoutPanel2";
+            this.tableLayoutPanel2.RowCount = 1;
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(1493, 315);
+            this.tableLayoutPanel2.TabIndex = 2;
             // 
-            // killChildrenButton
+            // panel1
             // 
-            this.killChildrenButton.Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.killChildrenButton.Location = new System.Drawing.Point(10, 90);
-            this.killChildrenButton.Name = "killChildrenButton";
-            this.killChildrenButton.Size = new System.Drawing.Size(200, 60);
-            this.killChildrenButton.TabIndex = 1;
-            this.killChildrenButton.Text = "Terminate";
-            this.killChildrenButton.UseVisualStyleBackColor = true;
-            this.killChildrenButton.Click += new System.EventHandler(this.killChildrenButton_Click);
+            this.panel1.Controls.Add(this.addServerButton);
+            this.panel1.Controls.Add(this.killChildrenButton);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(0, 0);
+            this.panel1.Margin = new System.Windows.Forms.Padding(0);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(220, 315);
+            this.panel1.TabIndex = 0;
             // 
             // addServerButton
             // 
@@ -168,6 +183,63 @@
             this.addServerButton.Text = "Add Server";
             this.addServerButton.UseVisualStyleBackColor = true;
             this.addServerButton.Click += new System.EventHandler(this.addServerButton_Click);
+            // 
+            // killChildrenButton
+            // 
+            this.killChildrenButton.Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.killChildrenButton.Location = new System.Drawing.Point(10, 76);
+            this.killChildrenButton.Name = "killChildrenButton";
+            this.killChildrenButton.Size = new System.Drawing.Size(200, 60);
+            this.killChildrenButton.TabIndex = 1;
+            this.killChildrenButton.Text = "Terminate";
+            this.killChildrenButton.UseVisualStyleBackColor = true;
+            this.killChildrenButton.Click += new System.EventHandler(this.killChildrenButton_Click);
+            // 
+            // browserListView
+            // 
+            this.browserListView.AutoArrange = false;
+            this.browserListView.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.browserListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.statusColumnHeader,
+            this.logEntryColumnHeader,
+            this.urlColumnHeader,
+            this.socketColumnHeader});
+            this.browserListView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.browserListView.FullRowSelect = true;
+            this.browserListView.GridLines = true;
+            this.browserListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.browserListView.Location = new System.Drawing.Point(220, 0);
+            this.browserListView.Margin = new System.Windows.Forms.Padding(0);
+            this.browserListView.MultiSelect = false;
+            this.browserListView.Name = "browserListView";
+            this.browserListView.ShowGroups = false;
+            this.browserListView.Size = new System.Drawing.Size(1273, 315);
+            this.browserListView.TabIndex = 1;
+            this.browserListView.UseCompatibleStateImageBehavior = false;
+            this.browserListView.View = System.Windows.Forms.View.Details;
+            // 
+            // statusColumnHeader
+            // 
+            this.statusColumnHeader.Text = "Status";
+            // 
+            // logEntryColumnHeader
+            // 
+            this.logEntryColumnHeader.Text = "Log Entry";
+            this.logEntryColumnHeader.Width = 250;
+            // 
+            // urlColumnHeader
+            // 
+            this.urlColumnHeader.Text = "URL";
+            this.urlColumnHeader.Width = 560;
+            // 
+            // logUpdateTimer
+            // 
+            this.logUpdateTimer.Tick += new System.EventHandler(this.logUpdateTimer_Tick);
+            // 
+            // socketColumnHeader
+            // 
+            this.socketColumnHeader.Text = "Socket";
+            this.socketColumnHeader.Width = 68;
             // 
             // Form1
             // 
@@ -186,6 +258,8 @@
             this.tableLayoutPanel1.ResumeLayout(false);
             this.serverDetailPanel.ResumeLayout(false);
             this.controlPanel.ResumeLayout(false);
+            this.tableLayoutPanel2.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -199,9 +273,16 @@
         private System.Windows.Forms.Button addServerButton;
         private System.Windows.Forms.ListBox logListBox;
         private System.Windows.Forms.Button killChildrenButton;
-        private System.Windows.Forms.Splitter splitter1;
         private System.Windows.Forms.Button killServerButton;
         private System.Windows.Forms.Button removeServerButton;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.ListView browserListView;
+        private System.Windows.Forms.ColumnHeader statusColumnHeader;
+        private System.Windows.Forms.ColumnHeader logEntryColumnHeader;
+        private System.Windows.Forms.ColumnHeader urlColumnHeader;
+        private System.Windows.Forms.Timer logUpdateTimer;
+        private System.Windows.Forms.ColumnHeader socketColumnHeader;
 
 
     }

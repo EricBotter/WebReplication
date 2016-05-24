@@ -33,7 +33,7 @@ namespace WebReplicationDemo
             RECEIVED,
             REQUESTED,
             COMPLETED,
-            EVADED,
+            PROCESSED,
             TORESOLVE,
             RESOLVED
         }
@@ -56,7 +56,7 @@ namespace WebReplicationDemo
                     param1 = elements[1];
                     break;
                 case PacketType.COMPLETED:
-                case PacketType.EVADED:
+                case PacketType.PROCESSED:
                     param1 = elements[1];
                     param2 = elements[3];
                     break;
