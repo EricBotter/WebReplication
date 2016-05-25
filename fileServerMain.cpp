@@ -9,7 +9,7 @@
 #include "TCP/ServerConnection.h"
 #include "HTTP/HttpRequest.h"
 #include "HTTP/HttpResponse.h"
-#include "HTTP/FileServer.h"
+#include "Server/FileServer.h"
 #include "PSR/PsrMessage.h"
 #include "Utilities/IniReader.h"
 
