@@ -12,15 +12,11 @@ namespace WebReplicationDemo
 {
     class NetworkEntity
     {
-        public static List<NetworkEntity> allEntities = new List<NetworkEntity>();
-
         public PictureBox pictureBox { get; private set; }
         public Label label { get; private set; }
         public List<string> log { get; private set; }
         public string name { get; private set; }
         public int port { get; private set; }
-
-        public List<EntityConnection> clientConnections = new List<EntityConnection>();
 
         private Process process;
         private Thread logReader;
@@ -78,7 +74,14 @@ namespace WebReplicationDemo
             log = new List<string>();
             string line;
             while ((line = process.StandardError.ReadLine()) != null)
+            {
+                string[] elements = line.Split(' ');
+                if (elements[0] == "START")
+                {
+                    port = Convert.ToInt32(elements[1]);
+                }
                 log.Add(line);
+            }
         }
     }
 }

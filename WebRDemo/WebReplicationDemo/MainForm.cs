@@ -11,23 +11,28 @@ using System.Windows.Forms;
 
 namespace WebReplicationDemo
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         NetworkEntity resolver, proxy;
         List<NetworkEntity> fileservers = new List<NetworkEntity>();
-        NetworkEntity _activeServer;
+        Dictionary<int, NetworkEntity> proxySocketMap = new Dictionary<int, NetworkEntity>();
+        Dictionary<int, EntityConnection> proxyConnections = new Dictionary<int, EntityConnection>();
+
+        private NetworkEntity _activeServer;
         NetworkEntity activeServer
         {
-            get {
+            get
+            {
                 return _activeServer;
             }
-            set {
+            set
+            {
                 if (_activeServer != null)
                 {
                     _activeServer.pictureBox.BackColor = Color.Transparent;
                 }
-
                 _activeServer = value;
+
                 if (_activeServer == null)
                 {
                     removeServerButton.Enabled = killServerButton.Enabled = false;
@@ -40,6 +45,33 @@ namespace WebReplicationDemo
                         removeServerButton.Enabled = killServerButton.Enabled = false;
                     else
                         killServerButton.Enabled = !(removeServerButton.Enabled = _activeServer.hasExited());
+
+                    connectionsTreeView.SuspendLayout();
+                    connectionsTreeView.Nodes.Clear();
+                    if (_activeServer == proxy)
+                    {
+                        foreach (KeyValuePair<int, EntityConnection> item in proxyConnections)
+                        {
+                            connectionsTreeView.Nodes.Add(new TreeNode(
+                                "Connection with server on port " + item.Value.server.port + " on socket " + item.Key,
+                                (item.Value.packets.AsEnumerable().Select<Packet, TreeNode>(x => new TreeNode(x.ToString()))).ToArray()
+                            ));
+                        }
+                    }
+                    else if (_activeServer != resolver)
+                    {
+                        foreach (KeyValuePair<int, EntityConnection> item in proxyConnections)
+                        {
+                            if (item.Value.server == activeServer)
+                            {
+                                connectionsTreeView.Nodes.Add(new TreeNode(
+                                    "Connection with proxy",
+                                    (item.Value.packets.AsEnumerable().Select<Packet, TreeNode>(x => new TreeNode(x.ToString()))).ToArray()
+                                ));
+                            }
+                        }
+                    }
+                    connectionsTreeView.ResumeLayout();
 
                     logListBox.SuspendLayout();
                     logListBox.Items.Clear();
@@ -83,7 +115,7 @@ namespace WebReplicationDemo
         }
         #endregion
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
 
@@ -202,7 +234,7 @@ namespace WebReplicationDemo
                 serverDisplayPanel.Controls.Remove(activeServer.pictureBox);
                 activeServer = null;
                 killServerButton.Enabled = removeServerButton.Enabled = false;
-                
+
                 serverDisplayPanel_SizeChanged(sender, e);
             }
         }
@@ -214,14 +246,49 @@ namespace WebReplicationDemo
                 string[] elements = proxy.log[proxyLogLineParsed].Split(' ');
                 switch (elements[0])
                 {
+                    case "CONNECT":
+                        int socket = Convert.ToInt32(elements[3]);
+                        if (elements[1] == "localhost" || elements[1] == "127.0.0.1")
+                        {
+                            int port = Convert.ToInt32(elements[2]);
+                            NetworkEntity server = fileservers.AsEnumerable().FirstOrDefault(x => x.port == port);
+                            proxySocketMap.Add(socket, server);
+                            if (server != null)
+                                proxyConnections.Add(socket, new EntityConnection(proxy, server));
+                        }
+                        else
+                        {
+                            proxySocketMap.Add(socket, null);
+                        }
+                        break;
+                    case "CLOSED":
+                        socket = Convert.ToInt32(elements[1]);
+                        if (proxySocketMap.Keys.Contains(socket))
+                        {
+                            if (proxySocketMap[socket] != null)
+                                proxyConnections.Remove(socket);
+                            proxySocketMap.Remove(socket);
+                        }
+                        break;
                     case "REQUESTED":
-                        browserListView.Items.Add(new ListViewItem(new string[]{"...", elements[0], elements[1], elements[2]}));
+                        socket = Convert.ToInt32(elements[2]);
+                        proxyConnections[socket].addPacket(new Packet(proxy.log[proxyLogLineParsed]));
+                        browserListView.Items.Add(new ListViewItem(new string[]{
+                            "...",
+                            elements[0],
+                            elements[1].EndsWith("?sig") ? "Signature" : "Object",
+                            elements[1],
+                            (fileservers.IndexOf(proxySocketMap[Convert.ToInt32(elements[2])]) + 1).ToString()
+                        }));
                         browserListView.Items[browserListView.Items.Count - 1].EnsureVisible();
                         break;
                     case "COMPLETED":
+                        socket = Convert.ToInt32(elements[2]);
+                        proxyConnections[socket].addPacket(new Packet(proxy.log[proxyLogLineParsed]));
                         foreach (ListViewItem item in browserListView.Items)
                         {
-                            if (item.SubItems[2].Text == elements[1]) {
+                            if (item.SubItems[3].Text == elements[1] && item.SubItems[1].Text == "REQUESTED")
+                            {
                                 item.SubItems[1].Text = elements[0];
                                 item.SubItems[0].Text = elements[3];
                                 if (elements[3] == "200")
@@ -249,6 +316,21 @@ namespace WebReplicationDemo
                     default:
                         break;
                 }
+            }
+        }
+
+        private void browserListView_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            foreach (var server in fileservers)
+            {
+                server.pictureBox.BackColor = Color.White;
+                if (server == activeServer)
+                    server.pictureBox.BackColor = Color.LightBlue;
+            }
+            foreach (ListViewItem item in browserListView.SelectedItems)
+            {
+                int server = Convert.ToInt32(item.SubItems[4].Text) - 1;
+                fileservers[server].pictureBox.BackColor = Color.Yellow;
             }
         }
     }

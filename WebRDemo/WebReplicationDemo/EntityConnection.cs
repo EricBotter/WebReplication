@@ -8,19 +8,17 @@ namespace WebReplicationDemo
 {
     class EntityConnection
     {
-        NetworkEntity client;
-        NetworkEntity server;
+        public NetworkEntity client;
+        public NetworkEntity server;
+        public List<Packet> packets = new List<Packet>();
 
-        List<Packet> packets = new List<Packet>();
-        bool active = false;
-
-        EntityConnection(NetworkEntity client, int port)
+        public EntityConnection(NetworkEntity client, NetworkEntity server)
         {
             this.client = client;
-            this.server = NetworkEntity.allEntities.AsEnumerable().FirstOrDefault(x => x.port == port);
+            this.server = server;
         }
 
-        void addPacket(Packet p)
+        public void addPacket(Packet p)
         {
             packets.Add(p);
         }
@@ -40,13 +38,15 @@ namespace WebReplicationDemo
 
         PacketType type;
         int socket;
+        string param0;
         string param1;
         string param2;
 
-        Packet(string logLine)
+        public Packet(string logLine)
         {
             string[] elements = logLine.Split(' ');
 
+            param0 = elements[0];
             Enum.TryParse(elements[0], out type);
 
             switch (type)
@@ -69,6 +69,11 @@ namespace WebReplicationDemo
             }
 
             socket = Convert.ToInt32(elements[2]);
+        }
+
+        public override string ToString()
+        {
+            return param0 + ' ' + param1 + (type == PacketType.COMPLETED || type == PacketType.PROCESSED ? ' ' + param2 : "");
         }
     }
 
