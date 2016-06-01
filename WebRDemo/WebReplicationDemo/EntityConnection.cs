@@ -26,7 +26,7 @@ namespace WebReplicationDemo
 
     class Packet
     {
-        enum PacketType
+        public enum PacketType
         {
             RECEIVED,
             REQUESTED,
@@ -36,11 +36,11 @@ namespace WebReplicationDemo
             RESOLVED
         }
 
-        PacketType type;
-        int socket;
-        string param0;
-        string param1;
-        string param2;
+        public PacketType type;
+        public int socket;
+        public string param0;
+        public string param1;
+        public string param2;
 
         public Packet(string logLine)
         {

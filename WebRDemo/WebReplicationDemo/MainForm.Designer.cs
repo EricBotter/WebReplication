@@ -36,7 +36,6 @@
             this.killServerButton = new System.Windows.Forms.Button();
             this.removeServerButton = new System.Windows.Forms.Button();
             this.connectionsTreeView = new System.Windows.Forms.TreeView();
-            this.logListBox = new System.Windows.Forms.ListBox();
             this.serverDisplayPanel = new System.Windows.Forms.Panel();
             this.controlPanel = new System.Windows.Forms.Panel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
@@ -50,6 +49,7 @@
             this.urlColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.serverColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.logUpdateTimer = new System.Windows.Forms.Timer(this.components);
+            this.successImageList = new System.Windows.Forms.ImageList(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             this.serverDetailPanel.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -82,7 +82,6 @@
             // 
             this.serverDetailPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.serverDetailPanel.Controls.Add(this.tableLayoutPanel3);
-            this.serverDetailPanel.Controls.Add(this.logListBox);
             this.serverDetailPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.serverDetailPanel.Location = new System.Drawing.Point(1052, 4);
             this.serverDetailPanel.Margin = new System.Windows.Forms.Padding(0, 4, 4, 4);
@@ -98,14 +97,14 @@
             this.tableLayoutPanel3.Controls.Add(this.killServerButton, 0, 0);
             this.tableLayoutPanel3.Controls.Add(this.removeServerButton, 1, 0);
             this.tableLayoutPanel3.Controls.Add(this.connectionsTreeView, 0, 1);
-            this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Top;
+            this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel3.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             this.tableLayoutPanel3.RowCount = 2;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 70F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(445, 501);
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(445, 737);
             this.tableLayoutPanel3.TabIndex = 3;
             // 
             // killServerButton
@@ -136,22 +135,14 @@
             // 
             this.tableLayoutPanel3.SetColumnSpan(this.connectionsTreeView, 2);
             this.connectionsTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.connectionsTreeView.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.connectionsTreeView.ImageIndex = 0;
+            this.connectionsTreeView.ImageList = this.successImageList;
             this.connectionsTreeView.Location = new System.Drawing.Point(3, 73);
             this.connectionsTreeView.Name = "connectionsTreeView";
-            this.connectionsTreeView.Size = new System.Drawing.Size(439, 425);
+            this.connectionsTreeView.SelectedImageIndex = 0;
+            this.connectionsTreeView.Size = new System.Drawing.Size(439, 661);
             this.connectionsTreeView.TabIndex = 3;
-            // 
-            // logListBox
-            // 
-            this.logListBox.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.logListBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.logListBox.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.logListBox.FormattingEnabled = true;
-            this.logListBox.ItemHeight = 20;
-            this.logListBox.Location = new System.Drawing.Point(0, 517);
-            this.logListBox.Name = "logListBox";
-            this.logListBox.Size = new System.Drawing.Size(445, 220);
-            this.logListBox.TabIndex = 0;
             // 
             // serverDisplayPanel
             // 
@@ -236,6 +227,7 @@
             this.urlColumnHeader,
             this.serverColumnHeader});
             this.browserListView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.browserListView.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.browserListView.FullRowSelect = true;
             this.browserListView.GridLines = true;
             this.browserListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
@@ -252,30 +244,38 @@
             // statusColumnHeader
             // 
             this.statusColumnHeader.Text = "Status";
+            this.statusColumnHeader.Width = 82;
             // 
             // logEntryColumnHeader
             // 
             this.logEntryColumnHeader.Text = "Log Entry";
-            this.logEntryColumnHeader.Width = 250;
+            this.logEntryColumnHeader.Width = 210;
             // 
             // typeColumnHeader
             // 
             this.typeColumnHeader.Text = "Type";
-            this.typeColumnHeader.Width = 160;
+            this.typeColumnHeader.Width = 176;
             // 
             // urlColumnHeader
             // 
             this.urlColumnHeader.Text = "URL";
-            this.urlColumnHeader.Width = 560;
+            this.urlColumnHeader.Width = 700;
             // 
             // serverColumnHeader
             // 
             this.serverColumnHeader.Text = "Server";
-            this.serverColumnHeader.Width = 68;
+            this.serverColumnHeader.Width = 104;
             // 
             // logUpdateTimer
             // 
             this.logUpdateTimer.Tick += new System.EventHandler(this.logUpdateTimer_Tick);
+            // 
+            // successImageList
+            // 
+            this.successImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("successImageList.ImageStream")));
+            this.successImageList.TransparentColor = System.Drawing.Color.Transparent;
+            this.successImageList.Images.SetKeyName(0, "green_tick.png");
+            this.successImageList.Images.SetKeyName(1, "red_cross.png");
             // 
             // MainForm
             // 
@@ -308,7 +308,6 @@
         private System.Windows.Forms.Panel serverDisplayPanel;
         private System.Windows.Forms.Panel controlPanel;
         private System.Windows.Forms.Button addServerButton;
-        private System.Windows.Forms.ListBox logListBox;
         private System.Windows.Forms.Button killChildrenButton;
         private System.Windows.Forms.Button killServerButton;
         private System.Windows.Forms.Button removeServerButton;
@@ -323,6 +322,7 @@
         private System.Windows.Forms.ColumnHeader typeColumnHeader;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
         private System.Windows.Forms.TreeView connectionsTreeView;
+        private System.Windows.Forms.ImageList successImageList;
 
 
     }

@@ -36,7 +36,6 @@ namespace WebReplicationDemo
                 if (_activeServer == null)
                 {
                     removeServerButton.Enabled = killServerButton.Enabled = false;
-                    logListBox.Items.Clear();
                 }
                 else
                 {
@@ -50,33 +49,47 @@ namespace WebReplicationDemo
                     connectionsTreeView.Nodes.Clear();
                     if (_activeServer == proxy)
                     {
-                        foreach (KeyValuePair<int, EntityConnection> item in proxyConnections)
-                        {
-                            connectionsTreeView.Nodes.Add(new TreeNode(
-                                "Connection with server on port " + item.Value.server.port + " on socket " + item.Key,
-                                (item.Value.packets.AsEnumerable().Select<Packet, TreeNode>(x => new TreeNode(x.ToString()))).ToArray()
-                            ));
-                        }
+                        connectionsTreeView.Nodes.AddRange(
+                        (
+                            from item in proxyConnections
+                            select new TreeNode("Socket " + item.Key + " conn. on port " + item.Value.server.port,
+                            (
+                                from x in item.Value.packets
+                                where x.type == Packet.PacketType.COMPLETED
+                                group x by x.param1.Substring(0, x.param1.IndexOf('/')) into y
+                                select new TreeNode(y.Key,
+                                (
+                                    from z in y
+                                    select new TreeNode(z.param2 + " -- " + z.param1.Substring(z.param1.IndexOf('/')),
+                                            z.param2 == "200" ? 0 : 1, z.param2 == "200" ? 0 : 1)
+                                ).ToArray())
+                            ).ToArray())
+                        ).ToArray());
                     }
                     else if (_activeServer != resolver)
                     {
-                        foreach (KeyValuePair<int, EntityConnection> item in proxyConnections)
-                        {
-                            if (item.Value.server == activeServer)
-                            {
-                                connectionsTreeView.Nodes.Add(new TreeNode(
-                                    "Connection with proxy",
-                                    (item.Value.packets.AsEnumerable().Select<Packet, TreeNode>(x => new TreeNode(x.ToString()))).ToArray()
-                                ));
-                            }
-                        }
+                        connectionsTreeView.Nodes.AddRange(
+                        (
+                            from item in proxyConnections
+                            where item.Value.server == activeServer
+                            select new TreeNode("Connection with proxy",
+                            (
+                                from x in item.Value.packets
+                                where x.type == Packet.PacketType.COMPLETED
+                                group x by x.param1.Substring(0, x.param1.IndexOf('/')) into y
+                                select new TreeNode(y.Key,
+                                (
+                                    from z in y
+                                    select new TreeNode(z.param2 + " -- " + z.param1.Substring(z.param1.IndexOf('/')),
+                                            z.param2 == "200" ? 0 : 1, z.param2 == "200" ? 0 : 1)
+                                ).ToArray())
+                            ).ToArray())
+                        ).ToArray());
                     }
+                    connectionsTreeView.ExpandAll();
+                    if (connectionsTreeView.Nodes.Count > 0)
+                        connectionsTreeView.Nodes[0].EnsureVisible();
                     connectionsTreeView.ResumeLayout();
-
-                    logListBox.SuspendLayout();
-                    logListBox.Items.Clear();
-                    logListBox.Items.AddRange(_activeServer.log.ToArray());
-                    logListBox.ResumeLayout();
                 }
             }
         }
@@ -330,7 +343,7 @@ namespace WebReplicationDemo
             foreach (ListViewItem item in browserListView.SelectedItems)
             {
                 int server = Convert.ToInt32(item.SubItems[4].Text) - 1;
-                fileservers[server].pictureBox.BackColor = Color.Yellow;
+                fileservers[server].pictureBox.BackColor = Color.PaleGreen;
             }
         }
     }
