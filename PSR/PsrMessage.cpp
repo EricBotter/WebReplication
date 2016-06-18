@@ -1,8 +1,10 @@
 #include <sstream>
 #include "PsrMessage.h"
 
+#define PSR_VERSION "PSR/0.3"
+
 PsrMessage::PsrMessage() {
-	version = "PSR/0.2";
+	version = PSR_VERSION;
 }
 
 PsrMessage::PsrMessage(const string& content) {
@@ -82,7 +84,7 @@ string PsrMessage::compile() {
 }
 
 void PsrMessage::setAddresses(const vector<string>& addresses) {
-	version = "PSR/0.2";
+	version = PSR_VERSION;
 	values.erase(values.begin(), values.end());
 	if (addresses.size() == 0) {
 		message = "NONE";
@@ -111,19 +113,19 @@ vector<string> PsrMessage::getHosts() {
 }
 
 void PsrMessage::setOk() {
-	version = "PSR/0.2";
+	version = PSR_VERSION;
 	message = "OK";
 	values.erase(values.begin(), values.end());
 }
 
 void PsrMessage::setInvalid() {
-	version = "PSR/0.2";
+	version = PSR_VERSION;
 	message = "INVALID";
 	values.erase(values.begin(), values.end());
 }
 
 void PsrMessage::setSites(const vector<string>& sites, const string& host) {
-	version = "PSR/0.2";
+	version = PSR_VERSION;
 	message = "ANNOUNCE";
 	values.erase(values.begin(), values.end());
 	stringstream ss;
@@ -135,7 +137,7 @@ void PsrMessage::setSites(const vector<string>& sites, const string& host) {
 }
 
 void PsrMessage::setResolve(const string& host) {
-	version = "PSR/0.2";
+	version = PSR_VERSION;
 	message = "RESOLVE";
 	values.erase(values.begin(), values.end());
 	values.insert({{"Host", host}});
@@ -156,4 +158,16 @@ vector<string> PsrMessage::getAnnounced(string& server) {
 	}
 	sites.push_back(value.substr(prevIndex));
 	return sites;
+}
+
+void PsrMessage::setReplicate(const vector<string>& websites) {
+	version = PSR_VERSION;
+	values.erase(values.begin(), values.end());
+	message = "OK";
+	if (websites.size() != 0) {
+		stringstream ss;
+		for (auto it = websites.begin(); it != websites.end(); ++it)
+			ss << ' ' << *it;
+		values.insert({{"Replicate", ss.str().substr(1)}});
+	}
 }

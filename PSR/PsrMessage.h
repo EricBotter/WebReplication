@@ -27,6 +27,7 @@ public:
 	void setResolve(const string&);
 	void setAddresses(const vector<string>&);
 	void setSites(const vector<string>&, const string&);
+	void setReplicate(const vector<string>&);
 	void setOk();
 	void setInvalid();
 
