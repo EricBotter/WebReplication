@@ -31,8 +31,7 @@ ServerDownloader::ServerDownloader() {
 }
 
 ServerDownloader::~ServerDownloader() {
-	wd.enqueueRequest(nullptr);
-	requestQueue.push(nullptr);
+	websiteQueue.push("");
 	if (downloaderThread->joinable()) {
 		downloaderThread->join();
 	}
@@ -40,6 +39,8 @@ ServerDownloader::~ServerDownloader() {
 }
 
 bool ServerDownloader::enqueueWebsite(const string& website) {
+	websiteQueue.push(website);
+
 	HttpRequest hr;
 	hr.version = "HTTP/1.0";
 	hr.method = "GET";
@@ -72,6 +73,11 @@ void ServerDownloader::threadFunction() {
 						wd.enqueueRequest(temp);
 						requestQueue.push(temp);
 					}
+				}
+				websiteQueue.pop();
+				if (websiteQueue.front() == "") {
+					wd.enqueueRequest(nullptr);
+					requestQueue.push(nullptr);
 				}
 			}
 			string folder = webpath + request->getWebsite() + request->getObjectUrl().substr(0, request->getObjectUrl().find_last_of("/"));

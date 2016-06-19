@@ -132,7 +132,8 @@ void PsrMessage::setSites(const vector<string>& sites, const string& host) {
 	for (string s : sites) {
 		ss << " " << s;
 	}
-	values.insert({{"Available", ss.str().substr(1)},
+
+	values.insert({{"Available", ss.str().length() == 0 ? "-" : ss.str().substr(1)},
 				   {"Server",    host}});
 }
 
@@ -151,12 +152,14 @@ vector<string> PsrMessage::getAnnounced(string& server) {
 
 	server = values["Server"];
 	string value = values["Available"];
-	size_t prevIndex = 0, index;
-	while ((index = value.find(" ", prevIndex)) != string::npos) {
-		sites.push_back(value.substr(prevIndex, index - prevIndex));
-		prevIndex = index + 1;
+	if (value != "-") {
+		size_t prevIndex = 0, index;
+		while ((index = value.find(" ", prevIndex)) != string::npos) {
+			sites.push_back(value.substr(prevIndex, index - prevIndex));
+			prevIndex = index + 1;
+		}
+		sites.push_back(value.substr(prevIndex));
 	}
-	sites.push_back(value.substr(prevIndex));
 	return sites;
 }
 

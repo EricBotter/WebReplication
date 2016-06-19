@@ -19,7 +19,6 @@ using namespace std;
 string confFilePath = "/var/webr/server.conf";
 string notfound = "<html><head><title>Not found</title></head><body><h1>Not found</h1>The requested object could not be found on this server</body></html>";
 FileServer fs;
-ServerDownloader sv;
 
 void connectionThread(Connection* client) {
 	Log::d("! Connection received. Waiting for HTTP request.");
@@ -138,41 +137,45 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	Log::d("Announcing sites to resolver...");
+	bool newWebsites;
+	do {
+		Connection* c = new Connection(
+				PsrMessage::addressFromAddress(resolverAddress),
+				PsrMessage::portFromAddress(resolverAddress)
+		);
+		PsrMessage pm;
+		pm.setSites(fs.getSiteList(), serverAddress);
+		c->sendStr(pm.compile());
+		pm = PsrMessage(*c);
+		delete c;
+
+		if (pm.message != "OK") {
+			Log::f("FATAL ERROR - Resolver didn't receive site list");
+			return EXIT_FAILURE;
+		}
+		//Replication
+		if (pm.values.find("Replicate") != pm.values.end()) {
+			ServerDownloader sv;
+			vector<string> hosts = pm.getWebsitesToReplicate();
+			for (int i = 0; i < hosts.size(); ++i) {
+				sv.enqueueWebsite(hosts[i]);
+			}
+			newWebsites = true;
+			// sv destructor waits until all files are downloaded
+		} else
+			newWebsites = false;
+	} while (newWebsites);
+
 	uint16_t serverport = PsrMessage::portFromAddress(serverAddress);
 
 	Log::d("Starting server on port " + to_string(serverport));
 	ServerConnection* sc = new ServerConnection(serverport);
-	while (sc->error() && serverport < 50000) {
+	if (sc->error()) {
 		delete sc;
-		serverport += 1;
-		this_thread::sleep_for(chrono::seconds(1));
-		sc = new ServerConnection(serverport);
-		Log::d("Starting server on port " + to_string(serverport));
-	}
-
-	Log::d("Announcing sites to resolver...");
-	Connection* c = new Connection(
-			PsrMessage::addressFromAddress(resolverAddress),
-			PsrMessage::portFromAddress(resolverAddress)
-	);
-	PsrMessage pm;
-	pm.setSites(fs.getSiteList(), PsrMessage::addressFromAddress(serverAddress) + ":" + to_string(serverport));
-	c->sendStr(pm.compile());
-	pm = PsrMessage(*c);
-	if (pm.message != "OK") {
-		Log::f("FATAL ERROR - Resolver didn't receive site list");
+		Log::e("FATAL ERROR - Could not open port " + to_string(serverport));
 		return EXIT_FAILURE;
 	}
-	//Replication
-	if (pm.values.find("Replicate") != pm.values.end()) {
-		vector<string> hosts = pm.getWebsitesToReplicate();
-		for (int i = 0; i < hosts.size(); ++i) {
-			sv.enqueueWebsite(hosts[i]);
-		}
-	}
-
-	delete c;
-
 	Log::d("Server started. Waiting for connection.");
 
 	Connection* client;

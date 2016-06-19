@@ -75,13 +75,14 @@ int main() {
 		} else if (request.message == "ANNOUNCE") {
 			string server;
 			vector<string> hosts = request.getAnnounced(server);
-			for (string host : hosts)
-				resolver.add(host, server);
 			vector<string> allWebsites = resolver.getAllWebsites();
 			vector<string> diff;
 			set_difference(allWebsites.begin(), allWebsites.end(), hosts.begin(), hosts.end(), diff.begin());
-			if (diff.size() == 0)
+			if (diff.size() == 0) {
+				for (string host : hosts)
+					resolver.add(host, server);
 				response.setOk();
+			}
 			else
 				response.setReplicate(diff);
 		} else {

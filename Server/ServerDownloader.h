@@ -10,6 +10,7 @@
 class ServerDownloader {
 private:
 	ConcurrentQueue<shared_ptr<VerifiedObjectRequest>> requestQueue;
+	ConcurrentQueue<string> websiteQueue;
 	WebsiteDownloader wd;
 	thread* downloaderThread;
 public:

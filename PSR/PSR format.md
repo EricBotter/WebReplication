@@ -37,6 +37,7 @@ Available: example1.peer example2.peer example3.peer example4.peer\r\n
 Server: 198.51.100.84:4011\r\n
 \r\n
 ```
+Note: `Available` contains a dash (`-`) if the FileServer does not host any website.
 
 Response:
 ```

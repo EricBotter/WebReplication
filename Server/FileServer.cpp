@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstring>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fstream>
@@ -66,6 +67,8 @@ vector<string> FileServer::getSiteList() {
 	if (dp != NULL) {
 		while ((ep = readdir(dp))) {
 			string fullpath = string(webpath) + ep->d_name;
+			if (strcmp(ep->d_name, ".") == 0 || strcmp(ep->d_name, "..") == 0)
+				continue;
 			if (stat(fullpath.c_str(), &s) == 0 && s.st_mode & S_IFDIR) {
 				out.push_back(ep->d_name);
 			}
