@@ -8,6 +8,9 @@ void WebrdReader::readFromString(const string& content) {
 	string line;
 	int progress = 0;
 	while (getline(ss, line)) {
+		while (*line.rbegin() == '\r' || *line.rbegin() == '\n') {
+			line.erase(line.end()-1, line.end());
+		}
 		if (progress == 0) {
 			if (line != WEBRD_VERSION)
 				return;

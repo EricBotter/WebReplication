@@ -61,7 +61,7 @@ void WebsiteDownloader::threadFunction() {
 		}
 		string website = request->getWebsite();
 		serverFromWebsite(website)->enqueueRequest(request->getObject());
-		if (request->canBeVerified())
+		if (request->getWebsite().find(".peer") != string::npos)
 			serverFromWebsite(website)->enqueueRequest(request->getSignature());
 		Log::t("Sent requests for url <" + request->getWebsite() + request->getObjectUrl() + '>');
 	}

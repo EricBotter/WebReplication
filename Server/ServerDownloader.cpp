@@ -2,6 +2,7 @@
 #include <climits>
 #include <cstring>
 #include "ServerDownloader.h"
+#include "../Network/FileVerifier.h"
 #include "../Utilities/WebrdReader.h"
 
 const string webpath = "/var/webr/websites/";
@@ -26,8 +27,9 @@ static void _mkdir(const char *dir) {
 	mkdir(tmp, S_IRWXU);
 }
 
-ServerDownloader::ServerDownloader() {
+ServerDownloader::ServerDownloader(const string& resolverAddress) {
 	downloaderThread = new thread(&ServerDownloader::threadFunction, this);
+	wd.setResolverAddress(resolverAddress);
 }
 
 ServerDownloader::~ServerDownloader() {
@@ -56,8 +58,13 @@ bool ServerDownloader::enqueueWebsite(const string& website) {
 void ServerDownloader::threadFunction() {
 	shared_ptr<VerifiedObjectRequest> request;
 	while ((request = requestQueue.pop())) {
-		request->waitForVerification();
-		if (!request->canBeVerified() || (request->canBeVerified() && request->isVerified())) {
+		request->getObject()->waitForCompleted();
+		request->getSignature()->waitForCompleted();
+		if (!request->canBeVerified() || FileVerifier::verify(
+				request->getWebsite(),
+				string(request->getObject()->getHttpResponse().content, request->getObject()->getHttpResponse().contentLength),
+				string(request->getSignature()->getHttpResponse().content, request->getSignature()->getHttpResponse().contentLength)
+		)) {
 			if (request->getObjectUrl() == "/.webrd") {
 				WebrdReader wr;
 				wr.readFromString(string(request->getObject()->getHttpResponse().content, request->getObject()->getHttpResponse().contentLength));
@@ -87,7 +94,7 @@ void ServerDownloader::threadFunction() {
 			fwrite(request->getObject()->getHttpResponse().content, request->getObject()->getHttpResponse().contentLength, 1, object);
 			fclose(object);
 
-			FILE* signature = fopen((sigpath + request->getWebsite() + request->getObjectUrl()).c_str(), "wb");
+			FILE* signature = fopen((sigpath + request->getWebsite() + request->getObjectUrl() + ".sig").c_str(), "wb");
 			fwrite(request->getSignature()->getHttpResponse().content, request->getSignature()->getHttpResponse().contentLength, 1, signature);
 			fclose(signature);
 		}

@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
 		}
 		//Replication
 		if (pm.values.find("Replicate") != pm.values.end()) {
-			ServerDownloader sv;
+			ServerDownloader sv(resolverAddress);
 			vector<string> hosts = pm.getWebsitesToReplicate();
 			for (int i = 0; i < hosts.size(); ++i) {
 				sv.enqueueWebsite(hosts[i]);

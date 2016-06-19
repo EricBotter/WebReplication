@@ -14,7 +14,7 @@ private:
 	WebsiteDownloader wd;
 	thread* downloaderThread;
 public:
-	ServerDownloader();
+	ServerDownloader(const string&);
 	~ServerDownloader();
 
 	bool enqueueWebsite(const string&);

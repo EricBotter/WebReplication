@@ -76,8 +76,11 @@ int main() {
 			string server;
 			vector<string> hosts = request.getAnnounced(server);
 			vector<string> allWebsites = resolver.getAllWebsites();
+			sort(hosts.begin(), hosts.end());
+			sort(allWebsites.begin(), allWebsites.end());
 			vector<string> diff;
-			set_difference(allWebsites.begin(), allWebsites.end(), hosts.begin(), hosts.end(), diff.begin());
+			set_difference(allWebsites.begin(), allWebsites.end(), hosts.begin(), hosts.end(),
+						   back_insert_iterator<vector<string>>(diff));
 			if (diff.size() == 0) {
 				for (string host : hosts)
 					resolver.add(host, server);
