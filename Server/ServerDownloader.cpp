@@ -2,7 +2,6 @@
 #include <climits>
 #include <cstring>
 #include "ServerDownloader.h"
-#include "../Network/FileVerifier.h"
 #include "../Utilities/WebrdReader.h"
 
 const string webpath = "/var/webr/websites/";
@@ -41,26 +40,23 @@ ServerDownloader::~ServerDownloader() {
 }
 
 bool ServerDownloader::enqueueWebsite(const string& website) {
-	if (FileVerifier::canVerify(website)) {
-		HttpRequest hr;
-		hr.version = "HTTP/1.0";
-		hr.method = "GET";
-		hr.url = "/.webrd";
-		hr.headers = {{"Connection", "keep-alive"}, {"Host", website}};
+	HttpRequest hr;
+	hr.version = "HTTP/1.0";
+	hr.method = "GET";
+	hr.url = "/.webrd";
+	hr.headers = {{"Connection", "keep-alive"}, {"Host", website}};
 
-		shared_ptr<VerifiedObjectRequest> temp = make_shared<VerifiedObjectRequest>(hr);
-		wd.enqueueRequest(temp);
-		requestQueue.push(temp);
-		return true;
-	}
-	return false;
+	shared_ptr<VerifiedObjectRequest> temp = make_shared<VerifiedObjectRequest>(hr);
+	wd.enqueueRequest(temp);
+	requestQueue.push(temp);
+	return true;
 }
 
 void ServerDownloader::threadFunction() {
 	shared_ptr<VerifiedObjectRequest> request;
 	while ((request = requestQueue.pop())) {
 		request->waitForVerification();
-		if (request->isVerified()) {
+		if (!request->canBeVerified() || (request->canBeVerified() && request->isVerified())) {
 			if (request->getObjectUrl() == "/.webrd") {
 				WebrdReader wr;
 				wr.readFromString(string(request->getObject()->getHttpResponse().content, request->getObject()->getHttpResponse().contentLength));

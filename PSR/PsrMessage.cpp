@@ -171,3 +171,18 @@ void PsrMessage::setReplicate(const vector<string>& websites) {
 		values.insert({{"Replicate", ss.str().substr(1)}});
 	}
 }
+
+vector<string> PsrMessage::getWebsitesToReplicate() {
+	vector<string> hosts;
+	if (message != "OK" || values.size() != 1 || values.begin()->first != "Replicate")
+		return hosts;
+
+	string value = values.begin()->second;
+	size_t prevIndex = 0, index;
+	while ((index = value.find(" ", prevIndex)) != string::npos) {
+		hosts.push_back(value.substr(prevIndex, index - prevIndex));
+		prevIndex = index + 1;
+	}
+	hosts.push_back(value.substr(prevIndex));
+	return hosts;
+}

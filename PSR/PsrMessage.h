@@ -23,6 +23,7 @@ public:
 
 	vector<string> getHosts();
 	vector<string> getAnnounced(string&);
+	vector<string> getWebsitesToReplicate();
 
 	void setResolve(const string&);
 	void setAddresses(const vector<string>&);

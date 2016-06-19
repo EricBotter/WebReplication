@@ -12,12 +12,14 @@
 #include "Server/FileServer.h"
 #include "PSR/PsrMessage.h"
 #include "Utilities/IniReader.h"
+#include "Server/ServerDownloader.h"
 
 using namespace std;
 
 string confFilePath = "/var/webr/server.conf";
 string notfound = "<html><head><title>Not found</title></head><body><h1>Not found</h1>The requested object could not be found on this server</body></html>";
 FileServer fs;
+ServerDownloader sv;
 
 void connectionThread(Connection* client) {
 	Log::d("! Connection received. Waiting for HTTP request.");
@@ -160,6 +162,13 @@ int main(int argc, char* argv[]) {
 	if (pm.message != "OK") {
 		Log::f("FATAL ERROR - Resolver didn't receive site list");
 		return EXIT_FAILURE;
+	}
+	//Replication
+	if (pm.values.find("Replicate") != pm.values.end()) {
+		vector<string> hosts = pm.getWebsitesToReplicate();
+		for (int i = 0; i < hosts.size(); ++i) {
+			sv.enqueueWebsite(hosts[i]);
+		}
 	}
 
 	delete c;
