@@ -29,3 +29,13 @@ set<string> Resolver::getAllHosts() {
 	lock_guard<mutex> guard(hostsMutex);
 	return hosts;
 }
+
+vector<string> Resolver::getAllWebsites() {
+	vector<string> out;
+	{
+		lock_guard<mutex> guard(addressMutex);
+		for (auto it : addressTable)
+			out.push_back(it.first);
+	}
+	return out;
+}

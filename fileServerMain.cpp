@@ -35,8 +35,8 @@ void connectionThread(Connection* client) {
 			response.version = "HTTP/1.0";
 
 			if (request.headers.find("X-Resolver") != request.headers.end()) {
-				response.responseCode = "200";
-				response.responseText = "OK";
+				response.responseCode = "204";
+				response.responseText = "No Content";
 				response.headers = {{"X-Resolver",  "ok"},
 									{"Connection", "close"}};
 			} else {

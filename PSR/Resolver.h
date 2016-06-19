@@ -20,6 +20,7 @@ public:
 	void add(const string&, const string&);
 	void remove(const string&);
 	set<string> getAllHosts();
+	vector<string> getAllWebsites();
 };
 
 

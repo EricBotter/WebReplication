@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include <thread>
+#include <algorithm>
 #include <sys/unistd.h>
 #include "Utilities/Log.h"
 #include "TCP/Connection.h"
@@ -38,7 +39,7 @@ void pollingThread() {
 			}
 
 			HttpResponse hres(c);
-			if (c.error() || hres.responseCode != "200") {
+			if (c.error() || hres.responseCode != "204") {
 				toRemove.insert(*it);
 			}
 		}
@@ -76,7 +77,13 @@ int main() {
 			vector<string> hosts = request.getAnnounced(server);
 			for (string host : hosts)
 				resolver.add(host, server);
-			response.setOk();
+			vector<string> allWebsites = resolver.getAllWebsites();
+			vector<string> diff;
+			set_difference(allWebsites.begin(), allWebsites.end(), hosts.begin(), hosts.end(), diff.begin());
+			if (diff.size() == 0)
+				response.setOk();
+			else
+				response.setReplicate(diff);
 		} else {
 			response.setInvalid();
 		}

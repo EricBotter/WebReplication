@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.2)
 project(Thesis)
 
 include_directories(/usr/include)
-link_libraries(/usr/lib/libcrypto.a /usr/lib/libz.a)
+link_libraries(crypto z)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -std=c++11 -pthread -g")
 

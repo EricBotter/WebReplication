@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstring>
 #include <sys/stat.h>
 
 #include <openssl/evp.h>
@@ -58,7 +59,9 @@ bool FileVerifier::verify(const string& website, const string& fileContent, cons
 		/* Clear any errors for the call below */
 		ERR_clear_error();
 
-		rc = EVP_DigestVerifyFinal(ctx, (const unsigned char*)signature.c_str(), signature.length());
+		unsigned char temp_str[signature.length()+1];
+		memcpy(temp_str, signature.c_str(), signature.length()+1);
+		rc = EVP_DigestVerifyFinal(ctx, temp_str, signature.length());
 		if (rc != 1) {
 //			printf("EVP_DigestVerifyFinal failed, error 0x%lx\n", ERR_peek_error());
 			break;
