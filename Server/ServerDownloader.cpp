@@ -90,7 +90,6 @@ void ServerDownloader::threadFunction() {
 				}
 			}
 
-			Log::f("--WRITING FILE --" + request->getWebsite() + request->getObjectUrl());
 			string folder = webpath + request->getWebsite() + request->getObjectUrl().substr(0, request->getObjectUrl().find_last_of("/"));
 			_mkdir(folder.c_str());
 			folder = sigpath + request->getWebsite() + request->getObjectUrl().substr(0, request->getObjectUrl().find_last_of("/"));
@@ -103,7 +102,6 @@ void ServerDownloader::threadFunction() {
 			FILE* signature = fopen((sigpath + request->getWebsite() + request->getObjectUrl() + ".sig").c_str(), "wb");
 			fwrite(request->getSignature()->getHttpResponse().content, request->getSignature()->getHttpResponse().contentLength, 1, signature);
 			fclose(signature);
-			Log::f("++DONEWRITINGFILE++"+request->getWebsite() + request->getObjectUrl());
 		}
 	}
 }
