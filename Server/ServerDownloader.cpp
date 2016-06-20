@@ -4,9 +4,12 @@
 #include "ServerDownloader.h"
 #include "../Network/FileVerifier.h"
 #include "../Utilities/WebrdReader.h"
+#include "../Utilities/Log.h"
 
 const string webpath = "/var/webr/websites/";
 const string sigpath = "/var/webr/signatures/";
+
+WebsiteDownloader wd;
 
 //source: http://nion.modprobe.de/blog/archives/357-Recursive-directory-creation.html
 static void _mkdir(const char *dir) {
@@ -83,11 +86,14 @@ void ServerDownloader::threadFunction() {
 				}
 				websiteQueue.pop();
 				if (websiteQueue.front() == "") {
-					wd.enqueueRequest(nullptr);
 					requestQueue.push(nullptr);
 				}
 			}
+
+			Log::f("--WRITING FILE --" + request->getWebsite() + request->getObjectUrl());
 			string folder = webpath + request->getWebsite() + request->getObjectUrl().substr(0, request->getObjectUrl().find_last_of("/"));
+			_mkdir(folder.c_str());
+			folder = sigpath + request->getWebsite() + request->getObjectUrl().substr(0, request->getObjectUrl().find_last_of("/"));
 			_mkdir(folder.c_str());
 
 			FILE* object = fopen((webpath + request->getWebsite() + request->getObjectUrl()).c_str(), "wb");
@@ -97,6 +103,7 @@ void ServerDownloader::threadFunction() {
 			FILE* signature = fopen((sigpath + request->getWebsite() + request->getObjectUrl() + ".sig").c_str(), "wb");
 			fwrite(request->getSignature()->getHttpResponse().content, request->getSignature()->getHttpResponse().contentLength, 1, signature);
 			fclose(signature);
+			Log::f("++DONEWRITINGFILE++"+request->getWebsite() + request->getObjectUrl());
 		}
 	}
 }
