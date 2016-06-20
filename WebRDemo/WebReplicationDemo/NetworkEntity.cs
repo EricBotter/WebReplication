@@ -22,11 +22,16 @@ namespace WebReplicationDemo
         private Thread logReader;
         private ProcessStartInfo psi;
 
+        private static int serverPort = 4011;
+
         public NetworkEntity(string name)
         {
             this.name = name;
 
-            psi = new ProcessStartInfo(Properties.Settings.Default.rootPath + "/" + name + ".exe", "--program-log");
+            if (name == "FileServer")
+                psi = new ProcessStartInfo(Properties.Settings.Default.rootPath + "/" + name + ".exe", "--program-log -p " + serverPort++);                
+            else
+                psi = new ProcessStartInfo(Properties.Settings.Default.rootPath + "/" + name + ".exe", "--program-log");
             psi.RedirectStandardInput = true;
             psi.RedirectStandardOutput = false;
             psi.RedirectStandardError = true;

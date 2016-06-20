@@ -114,10 +114,6 @@ void connectionThread(Connection* client) {
 }
 
 int main(int argc, char* argv[]) {
-	if (argc >= 2 && strcmp(argv[1], "--program-log") == 0) {
-		Log::enableLogToProgram();
-	}
-
 	string serverAddress = "127.0.0.1:4011"; //default address and port
 	string resolverAddress = "127.0.0.1:3921"; //default resolver
 
@@ -146,6 +142,15 @@ int main(int argc, char* argv[]) {
 	}
 
 	uint16_t serverport = PsrMessage::portFromAddress(serverAddress);
+
+	if (argc >= 2 && strcmp(argv[1], "--program-log") == 0) {
+		Log::enableLogToProgram();
+		if (argc >= 4 && strcmp(argv[2], "-p") == 0) {
+			sscanf(argv[3], "%hu", &serverport); // if it fails, serverport does not change
+		}
+	} else if (argc >= 3 && strcmp(argv[1], "-p") == 0) {
+		sscanf(argv[2], "%hu", &serverport); // if it fails, serverport does not change
+	}
 
 	Log::d("Starting server on port " + to_string(serverport));
 	ServerConnection* sc = new ServerConnection(serverport);
