@@ -3,7 +3,11 @@
 #include <sys/errno.h>
 #include <iostream>
 #include <cstring>
+#ifdef __APPLE__
+#include <unistd.h>
+#else
 #include <sys/unistd.h>
+#endif
 #include "ServerConnection.h"
 #include "../Utilities/Log.h"
 
@@ -20,7 +24,7 @@ ServerConnection::ServerConnection(uint16_t port) {
 	server.sin_addr.s_addr = htonl(INADDR_ANY);
 	server.sin_port = htons(port);
 
-	if (bind(sockfd, (sockaddr*)&server, sizeof(server)) < 0) {
+	if (::bind(sockfd, (sockaddr*)&server, sizeof(server)) < 0) {
 		Log::f("Unable to bind socket " + to_string(sockfd) + ": " + string(strerror(errno)));
 		lastError = errno;
 		return;

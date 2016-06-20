@@ -2,7 +2,11 @@
 #include <cstring>
 #include <netdb.h>
 #include <sstream>
+#ifdef __APPLE__
+#include <unistd.h>
+#else
 #include <sys/unistd.h>
+#endif
 #include <arpa/inet.h>
 #include <sys/errno.h>
 
@@ -85,7 +89,7 @@ Connection::Connection(const string& destHost, uint16_t destPort, const string& 
 		return;
 	}
 
-	status = bind(sockfd, (sockaddr*)&sin, sizeof(sin));
+	status = ::bind(sockfd, (sockaddr*)&sin, sizeof(sin));
 	if (status != 0) {
 		errorCode = errno;
 		Log::f("Error while binding to specified address:");
@@ -236,6 +240,6 @@ int Connection::error() {
 }
 
 void Connection::setTimeout(long milliseconds) {
-	struct timeval timeout = {milliseconds/1000, (milliseconds%1000)*1000};
+	struct timeval timeout = {milliseconds/1000, (int)((milliseconds%1000)*1000)};
 	setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 }

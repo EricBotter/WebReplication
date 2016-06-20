@@ -1,6 +1,7 @@
 #ifndef THESIS_RESOLVER_H
 #define THESIS_RESOLVER_H
 
+#include <string>
 #include <map>
 #include <vector>
 #include <set>
